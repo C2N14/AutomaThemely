@@ -1,0 +1,9 @@
+venv/
+snap/
+.idea/
+releases/
+*.egg-info/
+*.egg
+*__pycache__/
+*.pyc
+*.py[cod]

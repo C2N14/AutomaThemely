@@ -1,0 +1,39 @@
+{
+    "version": 1.0,
+    "themes": {
+        "light": "",
+        "dark": ""
+    },
+    "offset": {
+        "sunrise": 0,
+        "sunset": 0
+    },
+    "location": {
+        "auto_enabled": true,
+        "manual": {
+            "city": "",
+            "region_name": "",
+            "latitude": 0.0,
+            "longitude": 0.0,
+            "time_zone": ""
+        }
+    },
+    "misc": {
+        "notifications": true
+    },
+    "extras": {
+        "atom": {
+            "enabled": false,
+            "themes": {
+                "light": {
+                    "theme": "",
+                    "syntax": ""
+                },
+                "dark": {
+                    "theme": "",
+                    "syntax": ""
+                }
+            }
+        }
+    }
+}

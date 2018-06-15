@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=AutomaThemely
+Comment=Unity & GNOME python application for changing between themes periodically.
+Exec=automathemely
+Icon=automathemely
+Terminal=false
+StartupNotify=false
+Actions=Manage;Update;
+
+[Desktop Action Manage]
+Exec=automathemely --manage
+Name=Manage settings
+
+[Desktop Action Update]
+Exec=automathemely --update
+Name= Update sun times

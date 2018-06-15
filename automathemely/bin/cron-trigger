@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+## THIS SCRIPT MAKES SURE GUI APPLICATIONS (LIKE NOTIFICATIONS) CAN BE RUN THROUGH CRONTAB BY PASSING SOME ESSENTIAL ENV VARIABLES
+# Check whether the user is logged-in
+while [ -z "$(pgrep gnome-session -n -U $UID)" ]; do sleep 3; done
+
+# Export the current desktop session environment variables
+export $(xargs -0 -a "/proc/$(pgrep gnome-session -n -U $UID)/environ")
+
+# Execute the command
+eval $1
