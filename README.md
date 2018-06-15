@@ -13,7 +13,7 @@ Simple, set-and-forget python application for changing between GNOME themes acco
 * Python 3.5+
 * Crontab
 * GTK+ 3.0+ (optional, for the settings manager GUI)
-* Pip3 (optional, for installation)
+* pip3 (optional, for installation)
 
 ### Installing
 
@@ -41,7 +41,7 @@ Once installed, run once to generate a settings file
 automathemely
 ```
 
-And then run again with `-m` or `--manager` use the settings manager (requires GTK)
+And then run again with `-m` or `--manage` use the settings manager (requires GTK)
 
 ```
 automathemely --manage
