@@ -28,7 +28,7 @@ setup(
     python_requires='>3.5',
     install_requires=['requests', 'python-crontab', 'astral', 'pytz', 'notify2'],
     include_package_data=True,
-    package_data={'automathemely': get_package_files('automathemely/lib')},
+    package_data={'automathemely': get_package_files('automathemely/lib') + ['../automathemely/bin/cron-trigger']},
     data_files=[
         ('share/icons/hicolor/scalable/apps', ['automathemely/lib/automathemely.svg']),
         ('share/applications', ['automathemely/lib/automathemely.desktop'])

@@ -1,0 +1,29 @@
+name: automathemely
+version: '1.0'
+summary: Python application for changing between desktop themes according daylight
+type: app
+description: |
+  Very simple python application for switching between two desktop themes
+  (designed specifically for GNOME, but may work with more in the future)
+  when the sun rises and sets down, or at offsets of those times. For more
+  information view: https://github.com/C2N14/AutomaThemely
+
+grade: stable
+confinement: classic
+
+apps:
+  automathemely:
+    command: automathemely
+
+parts:
+  automathemely:
+    source: https://github.com/C2N14/AutomaThemely.git
+    source-tag: v1.0
+    plugin: python
+    python-version: python3
+    python-packages:
+      - requests
+      - python-crontab
+      - astral
+      - pytz
+      - notify2

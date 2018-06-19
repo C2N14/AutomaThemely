@@ -1,1 +1,2 @@
 recursive-include automathemely/lib *
+include automathemely/bin/cron-trigger
