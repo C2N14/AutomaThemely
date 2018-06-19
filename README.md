@@ -68,7 +68,7 @@ automathemely --update
 
 If you are like most users and don't leave your computer on 24/7, you should most likely add it to startup to get the most out of it (that is, if you don't want to run it everytime you login). Depending on your distro this instructions will be different. For Ubuntu and other similar systems you can follow [these instructions](https://askubuntu.com/questions/48321/how-do-i-start-applications-automatically-on-login)  
 
-###Running it manually
+### Running it manually
 
 In the case of it failing to do its job (please report to [issues](https://github.com/C2N14/AutomaThemely/issues)) you can always run it manually to try to fix it by running `automathemely` or by the icon on the application tray
 
