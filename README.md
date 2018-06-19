@@ -64,7 +64,7 @@ Finally, update all the necessary crontabs to make sure it runs at the right hou
 automathemely --update
 ```
 
-###Adding to startup/login
+### Adding to startup/login
 
 If you are like most users and don't leave your computer on 24/7, you should most likely add it to startup to get the most out of it (that is, if you don't want to run it everytime you login). Depending on your distro this instructions will be different. For Ubuntu and other similar systems you can follow [these instructions](https://askubuntu.com/questions/48321/how-do-i-start-applications-automatically-on-login)  
 
