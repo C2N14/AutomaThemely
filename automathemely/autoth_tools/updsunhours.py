@@ -67,22 +67,22 @@ def main(us_se, sys_log=False):
 
     for tab in cron:
         if tab.comment == 'sunrise_change_theme':
-            exists['sunrise_change_theme'], exists['any'] = True, True
+            exists['sunrise_change_theme']= True
             tab.hour.on(sr['hr'])
             tab.minute.on(sr['mn'])
         elif tab.comment == 'sunset_change_theme':
-            exists['sunset_change_theme'], exists['any'] = True, True
+            exists['sunset_change_theme']= True
             tab.hour.on(ss['hr'])
             tab.minute.on(ss['mn'])
 
         elif tab.comment == 'update_sunhours_daily':
-            exists['update_sunhours_daily'], exists['any'] = True, True
+            exists['update_sunhours_daily']= True
         elif tab.comment == 'update_sunhours_reboot':
             exists['update_sunhours_reboot'] = True
 
-    main_cmd = get_bin('cron-trigger') + ' "' + get_bin('run.py') + '" >>  ' + get_local('automathemely.log')
-    updsun_cmd = get_bin('cron-trigger') + ' "' + get_root('autoth_tools/updsunhours.py') + '" >>  '\
-                                                + get_local('.updsunhours.log')
+    main_cmd = get_bin('cron-trigger') + ' "' + get_bin('run.py') + '" >> ' + get_local('automathemely.log') + ' 2>&1'
+    updsun_cmd = get_bin('cron-trigger') + ' "' + get_root('autoth_tools/updsunhours.py') + '" >> '\
+                                                + get_local('.updsunhours.log') + ' 2>&1'
 
     if not exists['sunrise_change_theme']:
         job = cron.new(

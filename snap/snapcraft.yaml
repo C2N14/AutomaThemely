@@ -2,6 +2,7 @@ name: automathemely
 version: '1.0'
 summary: Python application for changing between desktop themes according daylight
 type: app
+icon: automathemely/lib/automathemely_large.svg
 description: |
   Very simple python application for switching between two desktop themes
   (designed specifically for GNOME, but may work with more in the future)

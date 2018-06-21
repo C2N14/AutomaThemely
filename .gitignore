@@ -1,6 +1,7 @@
 venv/
 .idea/
 releases/
+build/
 *.egg-info/
 *.egg
 *__pycache__/
