@@ -1,5 +1,5 @@
 {
-    "version": 1.0,
+    "version": 1.1,
     "themes": {
         "light": "",
         "dark": ""
@@ -12,7 +12,7 @@
         "auto_enabled": true,
         "manual": {
             "city": "",
-            "region_name": "",
+            "region": "",
             "latitude": 0.0,
             "longitude": 0.0,
             "time_zone": ""
@@ -33,6 +33,13 @@
                     "theme": "",
                     "syntax": ""
                 }
+            }
+        },
+        "vscode": {
+            "enabled": false,
+            "themes": {
+                "light": "",
+                "dark": ""
             }
         }
     }

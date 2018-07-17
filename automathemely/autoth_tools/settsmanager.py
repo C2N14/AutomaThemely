@@ -2,11 +2,18 @@
 import gi
 
 gi.require_version('Gtk', '3.0')
+# noinspection PyPep8
 from gi.repository import Gtk, Gdk
+# noinspection PyPep8
 from glob import glob
-from subprocess import check_output, CalledProcessError
+# noinspection PyPep8
+from subprocess import check_output
+# noinspection PyPep8
 import collections
+# noinspection PyPep8
 from automathemely import get_resource
+# noinspection PyPep8
+from . import extratools
 
 
 def get_installed_themes():
@@ -38,6 +45,26 @@ def isfloat(value):
         return True
     except ValueError:
         return False
+
+
+def common_plural(word):
+    # noinspection SpellCheckingInspection
+    consonants = 'bcdfghjklmnpqrstvwxyz'
+    if word.endswith(('s', 'x', 'z', 'ch')):
+        return word + 'es'
+    elif word.endswith('y') and word[-2] in consonants:
+        word[-1] = 'i'
+        return word + 'es'
+    elif word.endswith('o') and word[-2] in consonants:
+        return word + 'es'
+    elif word.endswith('f'):
+        word = word.rstrip('f')
+        return word + 'ves'
+    elif word.endswith('fe'):
+        word = word.rstrip('fe')
+        return word + 'ves'
+    else:
+        return word + 's'
 
 
 class DictTree(collections.UserDict):
@@ -92,9 +119,10 @@ class ProxyDict:
             self.master.update(self.front.maps[0])
 
 
+# noinspection PyUnusedLocal
 class GUI(object):
 
-    def __init__(self, us_se, th, atom):
+    def __init__(self, us_se, th, extras):
         css = b'''.frame-row{
                 background-color: @base_color;
             }
@@ -110,7 +138,7 @@ class GUI(object):
         )
 
         self.th = th
-        self.atom = atom
+        self.extras = extras
         self.builder = Gtk.Builder()
         self.builder.add_from_file(get_resource('manager_gui.glade'))
         self.builder.connect_signals(self)
@@ -136,16 +164,20 @@ class GUI(object):
             sunset_spin=('offset', 'sunset'),
             autolocation_inverse_switch=('location', 'auto_enabled'),
             manual_city_entry=('location', 'manual', 'city'),
-            manual_region_entry=('location', 'manual', 'region_name'),
+            manual_region_entry=('location', 'manual', 'region'),
             manual_latitude_entry_float=('location', 'manual', 'latitude'),
             manual_longitude_entry_float=('location', 'manual', 'longitude'),
             manual_timezone_entry=('location', 'manual', 'time_zone'),
             notification_switch=('misc', 'notifications'),
-            autoatom_switch=('extras', 'atom', 'enabled'),
-            atom_light_theme_box=('extras', 'atom', 'themes', 'light', 'theme'),
-            atom_light_syntax_box=('extras', 'atom', 'themes', 'light', 'syntax'),
-            atom_dark_theme_box=('extras', 'atom', 'themes', 'dark', 'theme'),
-            atom_dark_syntax_box=('extras', 'atom', 'themes', 'dark', 'syntax')
+            # Extras
+            autoatom_extra_switch=('extras', 'atom', 'enabled'),
+            atom_light_theme_extra_box=('extras', 'atom', 'themes', 'light', 'theme'),
+            atom_light_syntax_extra_box=('extras', 'atom', 'themes', 'light', 'syntax'),
+            atom_dark_theme_extra_box=('extras', 'atom', 'themes', 'dark', 'theme'),
+            atom_dark_syntax_extra_box=('extras', 'atom', 'themes', 'dark', 'syntax'),
+            autovscode_extra_switch=('extras', 'vscode', 'enabled'),
+            vscode_light_theme_extra_box=('extras', 'vscode', 'themes', 'light'),
+            vscode_dark_theme_extra_box=('extras', 'vscode', 'themes', 'dark')
         )
         self.changed = []
 
@@ -155,7 +187,7 @@ class GUI(object):
 
         self.main_window.show_all()
 
-    # Regular functions
+    #   Set GUI to match with the user's setting
     def set_all(self):
         for k in self.us_se_dict:
             v = self.us_se_dict[k]
@@ -170,8 +202,8 @@ class GUI(object):
                     Gtk.Adjustment(value=v, lower=-999, upper=999, step_increment=1, page_increment=5, page_size=0), 1,
                     0)
 
-            elif k.startswith('atom') and k.endswith('box'):
-                self.set_atom_box(k, v)
+            elif k.endswith('extra_box'):
+                self.set_extra_box(k, v)
 
             elif k.endswith('box'):
                 if v in self.th:
@@ -193,41 +225,40 @@ class GUI(object):
                     switch.set_active(False)
                     if k.startswith('auto'):
                         self.on_frame_toggle(switch)
-        # Start listening for changes
+        #   Start listening for changes
         self.listen_changes = True
 
-    def set_atom_box(self, k, v):
-        if v in self.atom['syntaxes']:
-            index = self.atom['syntaxes'].index(v)
-        elif v in self.atom['themes']:
-            index = self.atom['themes'].index(v)
+    #   Needs to be separate so it can be called in on_enable_extra_mid_run
+    def set_extra_box(self, k, v):
+        extra = k.split('_')[0]
+        t = common_plural(k.split('_')[-3])
+        if v in self.extras[extra][t]:
+            index = self.extras[extra][t].index(v)
         else:
             index = -1
-        if 'syntax' in v:
-            box_type = 'syntaxes'
-        else:
-            box_type = 'themes'
+
         box = self.builder.get_object(k)
-        for i, val in enumerate(self.atom[box_type]):
+        for i, val in enumerate(self.extras[extra][t]):
             box.insert(i, str(i), val)
         box.set_active_id(str(index))
 
-    # FIXES for stuff that couldn't be done in Glade
+    #   FIXES for stuff that couldn't be done in Glade
     def fix_hint_link(self):
         hint_link = self.builder.get_object('hint_link')
-        hint_link.set_label("HINT: You can get this info at https://freegeoip.net/json/")
+        hint_link.set_label("HINT: You can get most of this info at https://ipinfo.io/json")
 
     def fix_labels(self):
         i = 0
         while True:
             label = self.builder.get_object('row_label{}'.format(i + 1))
             if label:
+                #   Label alignment could change in the future
                 label.set_alignment(0, 0.5)
                 i += 1
             else:
                 break
 
-    # HANDLERS
+    #   HANDLERS
     def on_frame_toggle(self, switch, state=None):
         frame_name = Gtk.Buildable.get_name(switch).replace('switch', 'toggle_frame')
 
@@ -241,7 +272,7 @@ class GUI(object):
         else:
             self.builder.get_object(frame_name).set_sensitive(active)
 
-    # Multipurpose handle referenced on on_save_settings
+    #   Multipurpose handle referenced on on_save_settings
     def on_any_change(self, emitter, state=None, output=False):
         emitter_name = Gtk.Buildable.get_name(emitter)
         if self.listen_changes:
@@ -268,7 +299,7 @@ class GUI(object):
                     if emitter_data == self.us_se_dict[emitter_name]:
                         self.changed.remove(emitter_name)
 
-    # This shouldn't be a separate function but if added to on_any_change it stops working reliably
+    #   This shouldn't be a separate function but if added to on_any_change it stops working reliably
     def on_float_entry_change(self, emitter):
         text = emitter.get_text()
         if text.strip() == '' or not isfloat(text):
@@ -280,25 +311,32 @@ class GUI(object):
             emitter.set_icon_from_stock(0, None)
             self.entries_error.remove(Gtk.Buildable.get_name(emitter))
 
-    def on_enable_atom_mid_run(self, switch, state=None):
-        if switch.get_active():
-            if (not self.atom['themes']) or (not self.atom['syntaxes']):
-                try:
-                    self.atom = get_atom_themes()
-                except CalledProcessError as e:
+    def on_enable_extra_mid_run(self, switch, state=None):
+        if self.listen_changes:
+            extra = Gtk.Buildable.get_name(switch).split('_')[0].replace('auto', '', 1)
+            if switch.get_active():
+                empty = False
+                for t, val in self.extras[extra].items():
+                    if not val:
+                        empty = True
+
+                if empty:
+                    th, is_error = extratools.get_extra_themes(extra)
+                    if is_error:
                         switch.set_active(False)
                         self.on_frame_toggle(switch)
                         switch.set_sensitive(False)
-                else:
-                    for k in self.us_se_dict:
-                        v = self.us_se_dict[k]
-                        if k.startswith('atom') and k.endswith('box'):
-                            self.set_atom_box(k, v)
+                    else:
+                        self.extras[extra] = th
+                        for k in self.us_se_dict:
+                            if k.startswith(extra):
+                                v = self.us_se_dict[k]
+                                self.set_extra_box(k, v)
 
     def on_confirm_exit(self, *args):
         if self.changed:
             response = self.confirm_dialog.run()
-            # This should be destroy() but for some reason it won't work again once it's called
+            #   This should be destroy() but for some reason it won't work again once it's called
             self.confirm_dialog.hide()
             if response == Gtk.ResponseType.YES:
                 Gtk.main_quit(*args)
@@ -311,7 +349,7 @@ class GUI(object):
     def on_save_settings(self, *args):
         if self.entries_error:
             self.error_dialog.run()
-            # This should also be destroy()
+            #   This should also be destroy()
             self.error_dialog.hide()
         else:
             for change in self.changed:
@@ -325,11 +363,15 @@ class GUI(object):
 
 def main(us_se):
     th = get_installed_themes()
-    if us_se['extras']['atom']['enabled']:
-        atom = get_atom_themes()
-    else:
-        atom = dict(themes=[], syntaxes=[])
+    extras = dict()
 
-    settings = GUI(us_se, th, atom).return_settings()
+    for k, v in us_se['extras'].items():
+        default = True
+        if v['enabled']:
+            default = False
+        out, is_error = extratools.get_extra_themes(k, default)
+        extras.update({k: out})
+
+    settings = GUI(us_se, th, extras).return_settings()
     Gtk.main()
     return settings

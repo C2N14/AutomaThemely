@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-import json
-from sys import exit, path
 import argparse
-import pickle as pkl
-import fcntl
 import copy
+import fcntl
+import json
+import pickle as pkl
+from sys import exit
+
 from automathemely import get_local
 
 parser = argparse.ArgumentParser()
@@ -17,7 +18,7 @@ options.add_argument('-u', '--update', help='updates the sunrise and sunset\'s c
                      default=False)
 
 
-# For --setting arg
+#   For --setting arg
 def lookup_dic(d, k):
     val = d
     for key in k:
@@ -28,7 +29,7 @@ def lookup_dic(d, k):
     return True
 
 
-# For --setting arg
+#   For --setting arg
 def write_dic(dic, lis, val):
     if len(lis) == 0:
         return val
@@ -38,7 +39,7 @@ def write_dic(dic, lis, val):
     return dic
 
 
-# For --list arg
+#   For --list arg
 def print_list(d, indent=0):
     for key, value in d.items():
         print('{}{}'.format('\t' * indent, key), end='')
@@ -49,16 +50,18 @@ def print_list(d, indent=0):
             print(' = {}'.format(value))
 
 
-# ARGUMENTS FUNCTION
+#   ARGUMENTS FUNCTION
 def main(us_se):
     args = parser.parse_args()
+
+    #   LIST
     if args.list:
         print('Current settings:')
         print_list(us_se)
         exit()
 
+    #   SET
     elif args.setting:
-
         if not args.setting.count('=') == 1:
             exit('\nERROR: Invalid string (None or more than one "=" signs)')
 
@@ -104,7 +107,7 @@ def main(us_se):
         else:
             exit('\nERROR: Key "{}" not found'.format(to_set_key))
 
-    # MANAGE
+    #   MANAGE
     elif args.manage:
         from . import settsmanager
 
@@ -127,7 +130,7 @@ def main(us_se):
             else:
                 return 'No changes were made', True
 
-    # UPDATE
+    #   UPDATE
     elif args.update:
         from . import updsunhours
         output, is_error = updsunhours.main(us_se)

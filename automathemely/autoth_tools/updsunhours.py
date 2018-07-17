@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-from time import sleep
-from datetime import timedelta
 import os
+from datetime import timedelta
+from time import sleep
 
+import pytz
+import tzlocal
 from astral import Location
 from crontab import CronTab
 
@@ -20,11 +22,11 @@ def main(us_se, sys_log=False):
     if us_se['location']['auto_enabled']:
         import requests
 
-        # Try to reach freegeoip, if no connection or html response not OK log and wait
-        con_err_msg = 'Can\'t reach https://freegeoip.net/ (Network may be down). Waiting 5 minutes to try again.'
+        #   Try to reach ipinfo, if no connection or html response not OK log and wait
+        con_err_msg = 'Can\'t reach https://ipinfo.io/ (Network may be down). Waiting 5 minutes to try again.'
         while True:
             try:
-                g = requests.get('https://freegeoip.net/json/')
+                g = requests.get('https://ipinfo.io/json')
             except (requests.exceptions.ConnectionError, ConnectionAbortedError,
                     ConnectionRefusedError, ConnectionResetError):
                 log_print(con_err_msg, sys_log)
@@ -36,6 +38,9 @@ def main(us_se, sys_log=False):
                 else:
                     break
         loc = g.json()
+        loc['time_zone'] = tzlocal.get_localzone().zone
+        loc['latitude'] = float(loc['loc'].strip().split(',')[0])
+        loc['longitude'] = float(loc['loc'].strip().split(',')[1])
     else:
         for k, v in us_se['location']['manual'].items():
             try:
@@ -46,10 +51,11 @@ def main(us_se, sys_log=False):
                 if not val:
                     return 'ERROR: Auto location is not enabled and some manual values are missing', True
         loc = us_se['location']['manual']
+
     try:
         location = Location()
         location.name = loc['city']
-        location.region = loc['region_name']
+        location.region = loc['region']
         location.latitude = loc['latitude']
         location.longitude = loc['longitude']
         location.timezone = loc['time_zone']
@@ -65,24 +71,27 @@ def main(us_se, sys_log=False):
     exists = dict.fromkeys(tabs, False)
     cron = CronTab(user=True)
 
+    main_cmd = get_bin('cron-trigger') + ' "' + get_bin('run.py') + '" >> ' + get_local('automathemely.log') + ' 2>&1'
+    updsun_cmd = get_bin('cron-trigger') + ' "' + get_root('autoth_tools/updsunhours.py') + '" >> '\
+                                                + get_local('.updsunhours.log') + ' 2>&1'
     for tab in cron:
         if tab.comment == 'sunrise_change_theme':
-            exists['sunrise_change_theme']= True
+            exists['sunrise_change_theme'] = True
+            tab.set_command(main_cmd)
             tab.hour.on(sr['hr'])
             tab.minute.on(sr['mn'])
         elif tab.comment == 'sunset_change_theme':
-            exists['sunset_change_theme']= True
+            exists['sunset_change_theme'] = True
+            tab.set_command(main_cmd)
             tab.hour.on(ss['hr'])
             tab.minute.on(ss['mn'])
 
         elif tab.comment == 'update_sunhours_daily':
-            exists['update_sunhours_daily']= True
+            exists['update_sunhours_daily'] = True
+            tab.set_command(updsun_cmd)
         elif tab.comment == 'update_sunhours_reboot':
             exists['update_sunhours_reboot'] = True
-
-    main_cmd = get_bin('cron-trigger') + ' "' + get_bin('run.py') + '" >> ' + get_local('automathemely.log') + ' 2>&1'
-    updsun_cmd = get_bin('cron-trigger') + ' "' + get_root('autoth_tools/updsunhours.py') + '" >> '\
-                                                + get_local('.updsunhours.log') + ' 2>&1'
+            tab.set_command(updsun_cmd)
 
     if not exists['sunrise_change_theme']:
         job = cron.new(
@@ -110,11 +119,12 @@ def main(us_se, sys_log=False):
 
     cron.write()
 
-    # To make sure it'll still work if it starts a little too soon
-    return [sunrise - timedelta(seconds=1), sunset - timedelta(seconds=1)], False
+    #   Subtract a second to make sure it'll still work if it starts a little too soon and convert to UTC for storage
+    return [(sunrise - timedelta(seconds=1)).astimezone(pytz.utc),
+            (sunset - timedelta(seconds=1)).astimezone(pytz.utc)], False
 
 
-# This should only be called when running through crontab
+#   This should only be called when running through crontab
 if __name__ == '__main__':
     import json
     import pickle as pkl
@@ -137,6 +147,6 @@ if __name__ == '__main__':
             try:
                 n.show()
             except TypeError as error:
-                print('You should most likely just ignore this error (check documentation), but just in case it is:\n',
+                print('You should most likely just ignore this error, but just in case it is:\n',
                       str(error))
                 # Really weird bug with notify2 where it requires some sort of id not specified in documentation

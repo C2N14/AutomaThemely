@@ -1,7 +1,7 @@
 #!/bin/bash
 
 declare -a outputs=("deb" "rpm" "sh")
-declare -a pypacks=("requests" "crontab" "astral" "tz" "notify2")
+declare -a pypacks=("astral" "crontab" "notify2" "requests" "tz" "tzlocal")
 declare -a otherdeps=("crontab")
 
 deps=""
@@ -27,4 +27,3 @@ then
 	mkdir "../releases/v$version"
 	mv automathemely* "../releases/v$version"
 fi
-

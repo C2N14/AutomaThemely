@@ -1109,7 +1109,7 @@
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <signal name="notify::active" handler="on_any_change" swapped="no"/>
-                                                    <signal name="notify::active" handler="on_enable_extra_mid_run" swapped="no"/>
+                                                    <signal name="notify::active" handler="on_enable_atom_mid_run" swapped="no"/>
                                                     <signal name="notify::active" handler="on_frame_toggle" swapped="no"/>
                                                   </object>
                                                 </child>
@@ -1490,7 +1490,6 @@
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <signal name="notify::active" handler="on_any_change" swapped="no"/>
-                                                    <signal name="notify::active" handler="on_enable_extra_mid_run" swapped="no"/>
                                                     <signal name="notify::active" handler="on_frame_toggle" swapped="no"/>
                                                   </object>
                                                 </child>

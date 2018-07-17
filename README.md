@@ -19,13 +19,7 @@ Simple, set-and-forget python application for changing between GNOME themes acco
 
 **[RECOMMENDED]** You can go to [releases](https://github.com/C2N14/AutomaThemely/releases) and download whichever package suits your needs
 
-~~Or install it through snapcraft~~ ([doesn't work at the moment, some issue with snapcraft](https://forum.snapcraft.io/t/update-all-python-snaps-not-working-with-classic-confinement-even-with-cleanbuild/5971))
-
-```
-snap install automathemely --classic
-```
-
-Or even clone the project and install it yourself (icons and shortcuts will not be installed)
+Or clone the project and install it yourself (icons and shortcuts will not be installed)
 
 ```
 git clone https://github.com/C2N14/AutomaThemely.git
@@ -41,7 +35,7 @@ Once installed, run once to generate a settings file
 automathemely
 ```
 
-And then run again with `-m` or `--manage` use the settings manager (requires GTK)
+And then run again with `-m` or `--manage` use the settings manager (requires GTK 3.0+)
 
 ```
 automathemely --manage
@@ -74,7 +68,8 @@ In the case of it failing to do its job (please report to [issues](https://githu
 
 ## Notes
 
-* Although it is specifically made for GNOME, it should be compatible with Unity, and other desktop environments could be implemented in the future.
+* This program assumes that a day in your location has both sunrise and sunset in the same 0 to 24 hr day span, and if you decide to set a custom time offset make sure both of these events still occur within this span
+* Although it is specifically made for GNOME, it should be compatible with Unity and other GNOME based environments, and other desktop environments *could* be implemented in the future.
 * This program requires an active internet connection **ONLY** if you set *Auto Location* on (it uses your ip to determine your geolocation), otherwise you can manually set your location and you won't need it.
 * You should never really manually edit the version number on the configuration file because it will most likely be overwritten 
 * Tested with Ubuntu 18.04 & Ubuntu 16.04

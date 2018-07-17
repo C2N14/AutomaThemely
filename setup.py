@@ -1,6 +1,8 @@
-from setuptools import setup
-from automathemely import __version__ as version
 import os
+
+from setuptools import setup
+
+from automathemely import __version__ as version
 
 
 def get_package_files(directory):
@@ -26,7 +28,7 @@ setup(
     license='GPLv3',
     packages=['automathemely', 'automathemely.bin', 'automathemely.autoth_tools'],
     python_requires='>3.5',
-    install_requires=['requests', 'python-crontab', 'astral', 'pytz', 'notify2'],
+    install_requires=['requests', 'python-crontab', 'astral', 'pytz', 'notify2', 'tzlocal'],
     include_package_data=True,
     package_data={'automathemely': get_package_files('automathemely/lib') + ['../automathemely/bin/cron-trigger']},
     data_files=[
