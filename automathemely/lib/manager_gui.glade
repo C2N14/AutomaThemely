@@ -160,7 +160,7 @@
                             <property name="can_focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="tittle_label1">
+                              <object class="GtkLabel" id="title_label1">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="margin_bottom">6</property>
@@ -354,7 +354,7 @@
                             <property name="can_focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="tittle_label2">
+                              <object class="GtkLabel" id="title_label2">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="margin_bottom">6</property>
@@ -548,7 +548,7 @@
                                 <property name="row_homogeneous">True</property>
                                 <property name="column_homogeneous">True</property>
                                 <child>
-                                  <object class="GtkLabel" id="tittle_label3">
+                                  <object class="GtkLabel" id="title_label3">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="margin_bottom">6</property>
@@ -985,7 +985,7 @@
                     <property name="row_homogeneous">True</property>
                     <property name="column_homogeneous">True</property>
                     <child>
-                      <object class="GtkLabel" id="tittle_label4">
+                      <object class="GtkLabel" id="title_label4">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="margin_bottom">6</property>
@@ -1076,7 +1076,7 @@
                                         <property name="row_homogeneous">True</property>
                                         <property name="column_homogeneous">True</property>
                                         <child>
-                                          <object class="GtkLabel" id="tittle_label5">
+                                          <object class="GtkLabel" id="title_label5">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="margin_bottom">6</property>
@@ -1457,7 +1457,7 @@
                                         <property name="row_homogeneous">True</property>
                                         <property name="column_homogeneous">True</property>
                                         <child>
-                                          <object class="GtkLabel" id="tittle_label6">
+                                          <object class="GtkLabel" id="title_label6">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="margin_bottom">6</property>

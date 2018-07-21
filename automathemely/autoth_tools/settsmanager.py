@@ -14,11 +14,15 @@ import collections
 from automathemely import get_resource
 # noinspection PyPep8
 from . import extratools
+import os
+from pathlib import Path
 
 
-def get_installed_themes():
-    directory = "/usr/share/themes/"
-    themes = [d.replace(directory, '').replace('/', '') for d in glob('{}*/'.format(directory))]
+def get_installed_themes(dirs):
+    themes = []
+    for directory in dirs:
+        t = [d.replace(directory, '').replace('/', '') for d in glob('{}*/'.format(directory))]
+        themes += t
     themes.sort()
     return themes
 
@@ -362,7 +366,13 @@ class GUI(object):
 
 
 def main(us_se):
-    th = get_installed_themes()
+    # All paths that I know of that can contain GTK themes
+    gtk_paths = [
+        '/usr/share/themes/',
+        os.path.join(Path.home(), '.themes/'),
+        os.path.join(Path.home(), '.local/share/themes/')
+    ]
+    th = get_installed_themes(gtk_paths)
     extras = dict()
 
     for k, v in us_se['extras'].items():

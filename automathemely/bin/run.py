@@ -8,11 +8,10 @@ from datetime import datetime
 from os import getuid, path, chdir, makedirs
 from pathlib import Path
 
-import notify2
 import pytz
 import tzlocal
 
-from automathemely import get_resource, get_local, __version__ as version
+from automathemely import get_resource, get_local, notify, __version__ as version
 
 
 def check_root():  # Prevent from being run as root for security and compatibility reasons
@@ -20,21 +19,17 @@ def check_root():  # Prevent from being run as root for security and compatibili
         sys.exit("This shouldn't be run as root unless told otherwise!")
 
 
-def notify_exit(message, exit_after=False):
-    n = notify2.Notification('AutomaThemely', message, get_resource('automathemely.svg'))
-    try:
-        n.show()
-    except TypeError as error:
-        print('You should most likely just ignore this error, but just in case it is:\n',
-              str(error))
-        # Really weird bug with notify2 where it requires some sort of id not specified in any documentation
+def notify_print_exit(message, enabled, exit_after=False):
+    if enabled:
+        notify(message)
     if exit_after:
         sys.exit(message)
+    else:
+        print(message)
 
 
 def main():
     check_root()
-    notify2.init('AutomaThemely')
 
     #   Set workspace as the directory of the script, and import tools package
     workspace = Path(path.dirname(path.realpath(__file__)))
@@ -47,7 +42,7 @@ def main():
         if not Path(get_local()).is_dir():
             makedirs(get_local())
         shutil.copy2(get_resource('default_user_settings.json'), get_local('user_settings.json'))
-        notify_exit('No valid config file found, creating one...', True)
+        notify_print_exit('No valid config file found, creating one...', True, True)
 
     with open(get_local('user_settings.json'), 'r') as f:
         user_settings = json.load(f)
@@ -61,30 +56,21 @@ def main():
         user_settings = default_settings
         user_settings['version'] = version
 
+    n_enabled = user_settings['misc']['notifications']
     #   If any argument is given, pass it/them to the arg manager module
     if len(sys.argv) > 1:
         output, exit_after = autoth_tools.argmanager.main(user_settings)
         if output:
-            if user_settings['misc']['notifications']:
-                notify_exit(output, exit_after)
-            else:
-                sys.exit(output)
+            notify_print_exit(output, n_enabled, True)
 
     if not Path(get_local('sun_hours.time')).is_file():
-        message = 'No valid times file found, creating one...'
-        if user_settings['misc']['notifications']:
-            notify_exit(message)
-        print(message)
+        notify_print_exit('No valid times file found, creating one...', n_enabled)
         output, is_error = autoth_tools.updsunhours.main(user_settings)
-        if not is_error:
+        if is_error:
+            notify_print_exit(output, n_enabled, True)
+        else:
             with open(get_local('sun_hours.time'), 'wb') as file:
                 pkl.dump(output, file, protocol=pkl.HIGHEST_PROTOCOL)
-        else:
-            if user_settings['misc']['notifications']:
-                notify_exit(output)
-            else:
-                print(output)
-        sys.exit()
 
     local_tz = tzlocal.get_localzone()
 
@@ -109,28 +95,22 @@ def main():
 
     #   Check if there is a theme set to change to
     if not change_theme:
-        message = 'ERROR: No {} theme set'.format(theme_type)
-        if user_settings['misc']['notifications']:
-            notify_exit(message, True)
-        else:
-            sys.exit(message)
+        notify_print_exit('ERROR: No {} theme set'.format(theme_type), n_enabled, True)
 
     #   Check if theme is different before trying to do anything
     if change_theme != current_theme:
-        message = 'Switching to {} theme...'.format(theme_type)
-        if user_settings['misc']['notifications']:
-            notify_exit(message)
-        else:
-            print(message)
+        notify_print_exit('Switching to {} theme...'.format(theme_type), n_enabled)
 
-        subprocess.run('/usr/bin/gsettings set org.gnome.desktop.interface gtk-theme ' + change_theme, shell=True)
+        from gi.repository import Gio
+        settings = Gio.Settings.new('org.gnome.desktop.interface')
+        settings['gtk-theme'] = change_theme
 
         #   Change extra themes
         for k, v in user_settings['extras'].items():
             if v['enabled']:
                 is_error = autoth_tools.extratools.set_extra_theme(user_settings, k, theme_type)
                 if is_error:
-                    notify_exit('ERROR: {} is enabled but cannot be found/set', True)
+                    notify_print_exit('ERROR: {} is enabled but cannot be found/set'.format(v), n_enabled, True)
 
 
 if __name__ == '__main__':

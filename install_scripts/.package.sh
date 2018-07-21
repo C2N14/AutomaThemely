@@ -1,8 +1,8 @@
 #!/bin/bash
 
 declare -a outputs=("deb" "rpm" "sh")
-declare -a pypacks=("astral" "crontab" "notify2" "requests" "tz" "tzlocal")
-declare -a otherdeps=("crontab")
+declare -a pypacks=("astral" "crontab" "requests" "tz" "tzlocal")
+declare -a otherdeps=("cron")
 
 deps=""
 for p in "${pypacks[@]}"
