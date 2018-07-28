@@ -1,5 +1,6 @@
 venv/
 .idea/
+.vscode/
 releases/
 build/
 *.egg-info/

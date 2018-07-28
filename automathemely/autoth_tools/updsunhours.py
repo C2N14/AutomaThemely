@@ -1,46 +1,54 @@
 #!/usr/bin/env python3
-import os
 from datetime import timedelta
 from time import sleep
 
 import pytz
 import tzlocal
 from astral import Location
-from crontab import CronTab
 
-from automathemely import get_bin, get_local, get_root, get_resource
-
-
-def log_print(log, sys_log):
-    print(log)
-    if sys_log:
-        from syslog import syslog
-        syslog('"' + os.path.basename(__file__) + ' (crontab): {}"'.format(log))
+from automathemely import get_local, verify_gnome_session
 
 
-def main(us_se, sys_log=False):
-    if us_se['location']['auto_enabled']:
-        import requests
+def get_loc_from_ip(logs):
+    import requests
 
-        #   Try to reach ipinfo, if no connection or html response not OK log and wait
-        con_err_msg = 'Can\'t reach https://ipinfo.io/ (Network may be down). Waiting 5 minutes to try again.'
-        while True:
-            try:
-                g = requests.get('https://ipinfo.io/json')
-            except (requests.exceptions.ConnectionError, ConnectionAbortedError,
-                    ConnectionRefusedError, ConnectionResetError):
-                log_print(con_err_msg, sys_log)
+    #   Try to reach ipinfo a max of 15 times, if no connection or html response not OK log and wait
+    con_err_msg = 'Can\'t reach https://ipinfo.io/ (Network may be down). Waiting 5 minutes to try again.'
+    for i in range(15):
+        if i == 14:
+            return None
+        try:
+            g = requests.get('https://ipinfo.io/json')
+        except (requests.exceptions.ConnectionError, ConnectionAbortedError,
+                ConnectionRefusedError, ConnectionResetError):
+            if logs:
+                logs.warning(con_err_msg)
+            else:
+                print(con_err_msg)
+            sleep(300)
+        else:
+            if not g.status_code == 200:
+                if logs:
+                    logs.warning(con_err_msg)
+                else:
+                    print(con_err_msg)
                 sleep(300)
             else:
-                if not g.status_code == 200:
-                    log_print(con_err_msg, sys_log)
-                    sleep(300)
-                else:
-                    break
-        loc = g.json()
+                return g
+
+
+def main(us_se, logs=None):
+    if us_se['location']['auto_enabled']:
+        loc = get_loc_from_ip(logs)
+        if loc:
+            loc = loc.json()
+        else:
+            return 'ERROR: Couldn\'t connect to ipinfo, giving up', True
+
+        loc['longitude'] = float(loc['loc'].strip().split(',')[1])
         loc['time_zone'] = tzlocal.get_localzone().zone
         loc['latitude'] = float(loc['loc'].strip().split(',')[0])
-        loc['longitude'] = float(loc['loc'].strip().split(',')[1])
+
     else:
         for k, v in us_se['location']['manual'].items():
             try:
@@ -65,88 +73,32 @@ def main(us_se, sys_log=False):
     sunrise = location.sun()['sunrise'].replace(second=0) + timedelta(minutes=us_se['offset']['sunrise'])
     sunset = location.sun()['sunset'].replace(second=0) + timedelta(minutes=us_se['offset']['sunset'])
 
-    sr = {'hr': sunrise.strftime('%H'), 'mn': sunrise.strftime('%M')}
-    ss = {'hr': sunset.strftime('%H'), 'mn': sunset.strftime('%M')}
-    tabs = ['sunrise_change_theme', 'sunset_change_theme', 'update_sunhours_daily', 'update_sunhours_reboot']
-    exists = dict.fromkeys(tabs, False)
-    cron = CronTab(user=True)
-
-    main_cmd = get_bin('cron-trigger') + ' "' + get_bin('run.py') + '" >> ' + get_local('automathemely.log') + ' 2>&1'
-    updsun_cmd = get_bin('cron-trigger') + ' "' + get_root('autoth_tools/updsunhours.py') + '" >> '\
-                                                + get_local('.updsunhours.log') + ' 2>&1'
-    for tab in cron:
-        if tab.comment == 'sunrise_change_theme':
-            exists['sunrise_change_theme'] = True
-            tab.set_command(main_cmd)
-            tab.hour.on(sr['hr'])
-            tab.minute.on(sr['mn'])
-        elif tab.comment == 'sunset_change_theme':
-            exists['sunset_change_theme'] = True
-            tab.set_command(main_cmd)
-            tab.hour.on(ss['hr'])
-            tab.minute.on(ss['mn'])
-
-        elif tab.comment == 'update_sunhours_daily':
-            exists['update_sunhours_daily'] = True
-            tab.set_command(updsun_cmd)
-        elif tab.comment == 'update_sunhours_reboot':
-            exists['update_sunhours_reboot'] = True
-            tab.set_command(updsun_cmd)
-
-    if not exists['sunrise_change_theme']:
-        job = cron.new(
-            command=main_cmd,
-            comment='sunrise_change_theme')
-        job.hour.on(sr['hr'])
-        job.minute.on(sr['mn'])
-    if not exists['sunset_change_theme']:
-        job = cron.new(
-            command=main_cmd,
-            comment='sunset_change_theme')
-        job.hour.on(ss['hr'])
-        job.minute.on(ss['mn'])
-
-    if not exists['update_sunhours_daily']:
-        job = cron.new(
-            command=updsun_cmd,
-            comment='update_sunhours_daily')
-        job.setall('@daily')
-    if not exists['update_sunhours_reboot']:
-        job = cron.new(
-            command=updsun_cmd,
-            comment='update_sunhours_reboot')
-        job.setall('@reboot')
-
-    cron.write()
-
-    #   Subtract a second to make sure it'll still work if it starts a little too soon and convert to UTC for storage
-    return [(sunrise - timedelta(seconds=1)).astimezone(pytz.utc),
-            (sunset - timedelta(seconds=1)).astimezone(pytz.utc)], False
+    #   Convert to UTC for storage
+    return [sunrise.astimezone(pytz.utc), sunset.astimezone(pytz.utc)], False
 
 
-#   This should only be called when running through crontab
+#   This should only be called when running through systemd
 if __name__ == '__main__':
     import json
     import pickle as pkl
-    import notify2
+    import logging
+
+    logger = logging.getLogger('updsunhours')
+    logger.setLevel(logging.WARNING)
+    fh = logging.FileHandler(get_local('.updsunhours.log'), mode='w')
+    fh.setLevel(logging.WARNING)
+    logger.addHandler(fh)
 
     with open(get_local('user_settings.json'), 'r') as f:
         user_settings = json.load(f)
 
-    output, is_error = main(user_settings, True)
+    output, is_error = main(user_settings, logger)
     if not is_error:
         with open(get_local('sun_hours.time'), 'wb') as file:
             pkl.dump(output, file, protocol=pkl.HIGHEST_PROTOCOL)
     else:
-        log_print(output, True)
-        if user_settings['misc']['notifications']:
-            notify2.init('AutomaThemely')
-            n = notify2.Notification('AutomaThemely',
-                                     'There were some errors while updating the sunrise and sunset times, '
-                                     'check .updsunhours.log for more details', get_resource('app_icon.svg'))
-            try:
-                n.show()
-            except TypeError as error:
-                print('You should most likely just ignore this error, but just in case it is:\n',
-                      str(error))
-                # Really weird bug with notify2 where it requires some sort of id not specified in documentation
+        logger.error(output)
+        if user_settings['misc']['notifications'] and verify_gnome_session():
+            from automathemely import notify
+            notify('There were some errors while updating the sunrise and sunset times, check '
+                   + get_local('.updsunhours.log') + ' for more details')

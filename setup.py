@@ -18,7 +18,8 @@ with open('README.md') as fh:
 
 setup(
     name='AutomaThemely',
-    version=version,
+    #version=version,
+    version=1.15,
     description='Simple, set-and-forget python application for changing between GNOME themes according to light and '
                 'dark hours',
     long_description=long_description,
@@ -28,9 +29,9 @@ setup(
     license='GPLv3',
     packages=['automathemely', 'automathemely.bin', 'automathemely.autoth_tools'],
     python_requires='>3.5',
-    install_requires=['requests', 'python-crontab', 'astral', 'pytz', 'notify2', 'tzlocal'],
+    install_requires=['requests', 'astral', 'pytz', 'tzlocal', 'schedule'],
     include_package_data=True,
-    package_data={'automathemely': get_package_files('automathemely/lib') + ['../automathemely/bin/cron-trigger']},
+    package_data={'automathemely': get_package_files('automathemely/lib')+['../automathemely/bin/systemd-trigger.sh']},
     data_files=[
         ('share/icons/hicolor/scalable/apps', ['automathemely/lib/automathemely.svg']),
         ('share/applications', ['automathemely/lib/automathemely.desktop'])

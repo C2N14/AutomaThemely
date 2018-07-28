@@ -2,7 +2,6 @@
 import json
 import pickle as pkl
 import shutil
-import subprocess
 import sys
 from datetime import datetime
 from os import getuid, path, chdir, makedirs
@@ -19,11 +18,15 @@ def check_root():  # Prevent from being run as root for security and compatibili
         sys.exit("This shouldn't be run as root unless told otherwise!")
 
 
-def notify_print_exit(message, enabled, exit_after=False):
+def notify_print_exit(message, enabled, exit_after=True, is_error=False):
     if enabled:
         notify(message)
     if exit_after:
-        sys.exit(message)
+        if is_error:
+            sys.exit(message)
+        else:
+            print(message)
+            sys.exit()
     else:
         print(message)
 
@@ -42,7 +45,7 @@ def main():
         if not Path(get_local()).is_dir():
             makedirs(get_local())
         shutil.copy2(get_resource('default_user_settings.json'), get_local('user_settings.json'))
-        notify_print_exit('No valid config file found, creating one...', True, True)
+        notify_print_exit('No valid config file found, creating one...', enabled=True, is_error=False)
 
     with open(get_local('user_settings.json'), 'r') as f:
         user_settings = json.load(f)
@@ -59,15 +62,15 @@ def main():
     n_enabled = user_settings['misc']['notifications']
     #   If any argument is given, pass it/them to the arg manager module
     if len(sys.argv) > 1:
-        output, exit_after = autoth_tools.argmanager.main(user_settings)
+        output, is_error = autoth_tools.argmanager.main(user_settings)
         if output:
-            notify_print_exit(output, n_enabled, True)
+            notify_print_exit(output, enabled=n_enabled, is_error=is_error)
 
     if not Path(get_local('sun_hours.time')).is_file():
-        notify_print_exit('No valid times file found, creating one...', n_enabled)
+        notify_print_exit('No valid times file found, creating one...', enabled=n_enabled, exit_after=False)
         output, is_error = autoth_tools.updsunhours.main(user_settings)
         if is_error:
-            notify_print_exit(output, n_enabled, True)
+            notify_print_exit(output, enabled=n_enabled, is_error=True)
         else:
             with open(get_local('sun_hours.time'), 'wb') as file:
                 pkl.dump(output, file, protocol=pkl.HIGHEST_PROTOCOL)
@@ -81,36 +84,34 @@ def main():
     now = datetime.now(pytz.utc).astimezone(local_tz).time()
     sunrise, sunset = sunrise.astimezone(local_tz).time(), sunset.astimezone(local_tz).time()
 
-    theme_type = None
-    if now <= sunrise:
-        theme_type = 'dark'
-    elif sunrise < now < sunset:
+    if sunrise < now < sunset:
         theme_type = 'light'
-    elif now >= sunset:
+    else:
         theme_type = 'dark'
 
+    from gi.repository import Gio
+    g_settings = Gio.Settings.new('org.gnome.desktop.interface')
+
     change_theme = user_settings['themes'][theme_type]
-    current_theme = subprocess.check_output('gsettings get org.gnome.desktop.interface gtk-theme', shell=True) \
-        .decode('utf-8').replace("'", '').strip()
+    current_theme = g_settings['gtk-theme']
 
     #   Check if there is a theme set to change to
     if not change_theme:
-        notify_print_exit('ERROR: No {} theme set'.format(theme_type), n_enabled, True)
+        notify_print_exit('ERROR: No {} theme set'.format(theme_type), enabled=n_enabled, is_error=True)
 
     #   Check if theme is different before trying to do anything
     if change_theme != current_theme:
-        notify_print_exit('Switching to {} theme...'.format(theme_type), n_enabled)
+        notify_print_exit('Switching to {} theme...'.format(theme_type), enabled=n_enabled, exit_after=False)
 
-        from gi.repository import Gio
-        settings = Gio.Settings.new('org.gnome.desktop.interface')
-        settings['gtk-theme'] = change_theme
+        g_settings['gtk-theme'] = change_theme
 
         #   Change extra themes
         for k, v in user_settings['extras'].items():
             if v['enabled']:
                 is_error = autoth_tools.extratools.set_extra_theme(user_settings, k, theme_type)
                 if is_error:
-                    notify_print_exit('ERROR: {} is enabled but cannot be found/set'.format(v), n_enabled, True)
+                    notify_print_exit('ERROR: {} {} is enabled but cannot be found/set'.format(v, theme_type),
+                                      enabled=n_enabled, is_error=True, exit_after=False)
 
 
 if __name__ == '__main__':

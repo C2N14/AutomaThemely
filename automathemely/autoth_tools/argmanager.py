@@ -6,7 +6,7 @@ import json
 import pickle as pkl
 from sys import exit
 
-from automathemely import get_local
+from automathemely import get_local, get_bin
 
 parser = argparse.ArgumentParser()
 options = parser.add_mutually_exclusive_group()
@@ -14,8 +14,11 @@ options.add_argument('-l', '--list', help='list all current settings', action='s
 options.add_argument('-s', '--setting', help="change a specific setting (e.g. key.subkey=value)")
 options.add_argument('-m', '--manage', help='easier to use settings manager GUI', action='store_true',
                      default=False)
-options.add_argument('-u', '--update', help='updates the sunrise and sunset\'s crontabs manually', action='store_true',
+options.add_argument('-u', '--update', help='update the sunrise and sunset\'s crontabs manually', action='store_true',
                      default=False)
+options.add_argument('-r', '--restart',
+                     help='(re)start the scheduler script if it were to not start or stop unexpectedly',
+                     action='store_true', default=False)
 
 
 #   For --setting arg
@@ -126,9 +129,9 @@ def main(us_se):
 
             has_changed = (new_se != us_se)
             if has_changed:
-                return 'Settings successfully saved', True
+                return 'Settings successfully saved', False
             else:
-                return 'No changes were made', True
+                return 'No changes were made', False
 
     #   UPDATE
     elif args.update:
@@ -137,7 +140,25 @@ def main(us_se):
         if not is_error:
             with open(get_local('sun_hours.time'), 'wb') as file:
                 pkl.dump(output, file, protocol=pkl.HIGHEST_PROTOCOL)
-            return 'Sun hours successfully updated', True
+            return 'Sun hours successfully updated', False
         else:
             # Pass the error message for a notification popup
             return output, True
+
+    #   START
+    elif args.restart:
+        from automathemely import pgrep
+        import subprocess
+        import os
+        if pgrep('autothscheduler.py', True):
+            return 'The scheduler is already running!', True
+        else:
+            try:
+                err_out = open(get_local('automathemely.log'), 'w')
+            except (FileNotFoundError, PermissionError):
+                err_out = subprocess.DEVNULL
+            subprocess.Popen(['/usr/bin/env', 'python3', get_bin('autothscheduler.py')],
+                             stdout=subprocess.DEVNULL,
+                             stderr=err_out,
+                             preexec_fn=os.setpgrp)
+            return 'Restarted the scheduler', False
