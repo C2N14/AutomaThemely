@@ -219,7 +219,7 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkComboBoxText" id="light_theme_box">
+                                              <object class="GtkComboBoxText" id="themes.light~themes-gtk">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="margin_left">3</property>
@@ -283,7 +283,7 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkComboBoxText" id="dark_theme_box">
+                                              <object class="GtkComboBoxText" id="themes.dark~themes-gtk">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="margin_left">3</property>
@@ -410,13 +410,14 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sunrise_spin">
+                                              <object class="GtkSpinButton" id="offset.sunrise">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="margin_left">3</property>
                                                 <property name="margin_right">3</property>
                                                 <property name="margin_top">3</property>
                                                 <property name="margin_bottom">3</property>
+                                                <property name="max_length">3</property>
                                                 <signal name="changed" handler="on_any_change" swapped="no"/>
                                               </object>
                                               <packing>
@@ -474,13 +475,15 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="sunset_spin">
+                                              <object class="GtkSpinButton" id="offset.sunset">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="margin_left">3</property>
                                                 <property name="margin_right">3</property>
                                                 <property name="margin_top">3</property>
                                                 <property name="margin_bottom">3</property>
+                                                <property name="max_length">3</property>
+                                                <property name="climb_rate">5</property>
                                                 <signal name="changed" handler="on_any_change" swapped="no"/>
                                               </object>
                                               <packing>
@@ -577,7 +580,7 @@
                                         <property name="yalign">0</property>
                                         <property name="xscale">0</property>
                                         <child>
-                                          <object class="GtkSwitch" id="autolocation_inverse_switch">
+                                          <object class="GtkSwitch" id="location.auto_enabled~frame-inverse">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <signal name="notify::active" handler="on_any_change" swapped="no"/>
@@ -600,7 +603,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkFrame" id="autolocation_inverse_toggle_frame">
+                              <object class="GtkFrame" id="location_toggleframe">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="label_xalign">0</property>
@@ -652,7 +655,7 @@
                                                       </packing>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkEntry" id="manual_city_entry">
+                                                      <object class="GtkEntry" id="location.manual.city">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="margin_left">3</property>
@@ -716,7 +719,7 @@
                                                       </packing>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkEntry" id="manual_region_entry">
+                                                      <object class="GtkEntry" id="location.manual.region">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="margin_left">3</property>
@@ -780,7 +783,7 @@
                                                       </packing>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkEntry" id="manual_latitude_entry_float">
+                                                      <object class="GtkEntry" id="location.manual.latitude~float">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="margin_left">3</property>
@@ -845,7 +848,7 @@
                                                       </packing>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkEntry" id="manual_longitude_entry_float">
+                                                      <object class="GtkEntry" id="location.manual.longitude~float">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="margin_left">3</property>
@@ -910,7 +913,7 @@
                                                       </packing>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkEntry" id="manual_timezone_entry">
+                                                      <object class="GtkEntry" id="location.manual.time_zone">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="margin_left">3</property>
@@ -1014,7 +1017,7 @@
                             <property name="yalign">0</property>
                             <property name="xscale">0</property>
                             <child>
-                              <object class="GtkSwitch" id="notification_switch">
+                              <object class="GtkSwitch" id="misc.notifications">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <signal name="notify::active" handler="on_any_change" swapped="no"/>
@@ -1105,7 +1108,7 @@
                                                 <property name="yalign">0</property>
                                                 <property name="xscale">0</property>
                                                 <child>
-                                                  <object class="GtkSwitch" id="autoatom_extra_switch">
+                                                  <object class="GtkSwitch" id="extras.atom.enabled~frame-normal">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <signal name="notify::active" handler="on_any_change" swapped="no"/>
@@ -1129,7 +1132,7 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkFrame" id="autoatom_extra_toggle_frame">
+                                      <object class="GtkFrame" id="extras_atom_toggleframe">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="label_xalign">0</property>
@@ -1181,7 +1184,7 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkComboBoxText" id="atom_light_theme_extra_box">
+                                                            <object class="GtkComboBoxText" id="extras.atom.themes.light.theme~extras-themes-atom">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
                                                             <property name="margin_left">3</property>
@@ -1245,7 +1248,7 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkComboBoxText" id="atom_light_syntax_extra_box">
+                                                            <object class="GtkComboBoxText" id="extras.atom.themes.light.syntax~extras-syntaxes-atom">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
                                                             <property name="margin_left">3</property>
@@ -1309,7 +1312,7 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkComboBoxText" id="atom_dark_theme_extra_box">
+                                                            <object class="GtkComboBoxText" id="extras.atom.themes.dark.theme~extras-themes-atom">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
                                                             <property name="margin_left">3</property>
@@ -1373,7 +1376,7 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkComboBoxText" id="atom_dark_syntax_extra_box">
+                                                            <object class="GtkComboBoxText" id="extras.atom.themes.dark.syntax~extras-syntaxes-atom">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
                                                             <property name="margin_left">3</property>
@@ -1486,7 +1489,7 @@
                                                 <property name="yalign">0</property>
                                                 <property name="xscale">0</property>
                                                 <child>
-                                                  <object class="GtkSwitch" id="autovscode_extra_switch">
+                                                  <object class="GtkSwitch" id="extras.vscode.enabled~frame-normal">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <signal name="notify::active" handler="on_any_change" swapped="no"/>
@@ -1510,7 +1513,7 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkFrame" id="autovscode_extra_toggle_frame">
+                                      <object class="GtkFrame" id="extras_vscode_toggleframe">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="label_xalign">0</property>
@@ -1562,7 +1565,7 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkComboBoxText" id="vscode_light_theme_extra_box">
+                                                            <object class="GtkComboBoxText" id="extras.vscode.themes.light~extras-themes-vscode">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
                                                             <property name="margin_left">3</property>
@@ -1626,7 +1629,7 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkComboBoxText" id="vscode_dark_theme_extra_box">
+                                                            <object class="GtkComboBoxText" id="extras.vscode.themes.dark~extras-themes-vscode">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
                                                             <property name="margin_left">3</property>

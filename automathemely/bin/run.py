@@ -4,7 +4,7 @@ import pickle as pkl
 import shutil
 import sys
 from datetime import datetime
-from os import getuid, path, chdir, makedirs
+import os
 from pathlib import Path
 
 import pytz
@@ -14,7 +14,7 @@ from automathemely import get_resource, get_local, notify, __version__ as versio
 
 
 def check_root():  # Prevent from being run as root for security and compatibility reasons
-    if getuid() == 0:
+    if os.getuid() == 0:
         sys.exit("This shouldn't be run as root unless told otherwise!")
 
 
@@ -35,24 +35,27 @@ def main():
     check_root()
 
     #   Set workspace as the directory of the script, and import tools package
-    workspace = Path(path.dirname(path.realpath(__file__)))
-    chdir(str(workspace))
+    workspace = Path(os.path.dirname(os.path.realpath(__file__)))
+    os.chdir(str(workspace))
     sys.path.append('..')
     import autoth_tools
 
     #   Test for settings file and if it doesn't exist copy it from defaults
     if not Path(get_local('user_settings.json')).is_file():
         if not Path(get_local()).is_dir():
-            makedirs(get_local())
+            os.makedirs(get_local())
         shutil.copy2(get_resource('default_user_settings.json'), get_local('user_settings.json'))
         notify_print_exit('No valid config file found, creating one...', enabled=True, is_error=False)
 
-    with open(get_local('user_settings.json'), 'r') as f:
-        user_settings = json.load(f)
+    try:
+        with open(get_local('user_settings.json'), 'r') as f:
+            user_settings = json.load(f)
+    except json.decoder.JSONDecodeError:
+        user_settings = dict()
 
     #   If settings files versions don't match (in case of an update for instance), overwrite values of
     #   default_settings with user_settings and use that instead
-    if user_settings['version'] != version:
+    if 'version' not in user_settings or user_settings['version'] != version:
         with open(get_resource('default_user_settings.json'), 'r') as f:
             default_settings = json.load(f)
         default_settings.update(user_settings)
@@ -65,6 +68,7 @@ def main():
         output, is_error = autoth_tools.argmanager.main(user_settings)
         if output:
             notify_print_exit(output, enabled=n_enabled, is_error=is_error)
+        sys.exit()
 
     if not Path(get_local('sun_hours.time')).is_file():
         notify_print_exit('No valid times file found, creating one...', enabled=n_enabled, exit_after=False)

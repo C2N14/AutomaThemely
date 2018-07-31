@@ -31,8 +31,8 @@ def get_next_run():
         sys.exit()
 
     now = datetime.now(pytz.utc).astimezone(tzlocal.get_localzone()).time()
-    sunrise, sunset = sunrise.astimezone(tzlocal.get_localzone()).time(), \
-                      sunset.astimezone(tzlocal.get_localzone()).time()
+    sunrise, sunset = (sunrise.astimezone(tzlocal.get_localzone()).time(),
+                       sunset.astimezone(tzlocal.get_localzone()).time())
 
     if sunrise < now < sunset:
         return ':'.join(str(sunset).split(':')[:-1])
@@ -47,8 +47,8 @@ def run_automathemely():
     from subprocess import run
     try:
         run('automathemely')
-    except Exception as e:
-        logger.exception(e)
+    except Exception as error:
+        logger.exception(error)
     return CancelJob
 
 

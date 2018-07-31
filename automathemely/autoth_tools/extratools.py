@@ -88,7 +88,7 @@ def set_extra_theme(us_se, extra, theme_type):
                            + us_se['extras']['atom']['themes'][theme_type]['syntax'] + '"'
                     i -= 1
                 if i == 2:
-                    # MakeReally sure it has the same spaces as the original file
+                    # Make sure it has the same spaces as the original file
                     item = ' ' * (len(item) - len(item.lstrip(' '))) + '"' \
                            + us_se['extras']['atom']['themes'][theme_type]['theme'] + '"'
                     i -= 1
@@ -107,7 +107,7 @@ def set_extra_theme(us_se, extra, theme_type):
         with open(target_file) as f:
             p = json.load(f)
 
-        p.update({'workbench.colorTheme': us_se['extras']['vscode']['themes'][theme_type]})
+        p['workbench.colorTheme'] = us_se['extras']['vscode']['themes'][theme_type]
 
         with open(target_file, 'w') as f:
             json.dump(p, f, indent=4)

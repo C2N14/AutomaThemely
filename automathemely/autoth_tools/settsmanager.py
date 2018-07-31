@@ -3,44 +3,67 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 # noinspection PyPep8
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gio, Gdk
+# noinspection PyPep8
+from automathemely import get_resource, get_local, notify
+# noinspection PyPep8
+from automathemely.autoth_tools import extratools
+# noinspection PyPep8
+import os
+# noinspection PyPep8
+from pathlib import Path
 # noinspection PyPep8
 from glob import glob
 # noinspection PyPep8
-from subprocess import check_output
-# noinspection PyPep8
-import collections
-# noinspection PyPep8
-from automathemely import get_resource
-# noinspection PyPep8
-from . import extratools
-import os
-from pathlib import Path
+import json
 
 
-def get_installed_themes(dirs):
+def get_installed_themes():
     themes = []
-    for directory in dirs:
+    # All paths that I know of that can contain GTK themes
+    gtk_paths = [
+        '/usr/share/themes/',
+        os.path.join(Path.home(), '.themes/'),
+        os.path.join(Path.home(), '.local/share/themes/')
+    ]
+    for directory in gtk_paths:
         t = [d.replace(directory, '').replace('/', '') for d in glob('{}*/'.format(directory))]
         themes += t
     themes.sort()
     return themes
 
 
-def get_atom_themes():
-    atom_packs = check_output('apm list --themes --bare', shell=True).decode('utf-8')
-    atom_packs = atom_packs.split('\n')
-    for i, v in enumerate(atom_packs):
-        atom_packs[i] = v.split('@')[0]
-    atom_packs = list(filter(None, atom_packs))
-    atom_themes = []
-    atom_syntaxes = []
-    for v in atom_packs:
-        if 'syntax' in v:
-            atom_syntaxes.append(v)
+def read_dict(dic, keys):
+    for k in keys:
+        dic = dic[k]
+    return dic
+
+
+def write_dic(dic, keys, value):
+    for key in keys[:-1]:
+        dic = dic.setdefault(key, {})
+    dic[keys[-1]] = value
+
+
+def split_name_attr(obj_id):
+    if '~' in obj_id:
+        return obj_id.split('~')
+    else:
+        return obj_id, None
+
+
+def try_or_default_type(val, try_type):
+    try:
+        return try_type(val)
+    except ValueError:
+        if try_type == str:
+            return ''
+        elif try_type == int:
+            return 0
+        elif try_type == float:
+            return 0.0
         else:
-            atom_themes.append(v)
-    return {'themes': sorted(atom_themes), 'syntaxes': sorted(atom_syntaxes)}
+            return None
 
 
 def isfloat(value):
@@ -51,82 +74,40 @@ def isfloat(value):
         return False
 
 
-def common_plural(word):
-    # noinspection SpellCheckingInspection
-    consonants = 'bcdfghjklmnpqrstvwxyz'
-    if word.endswith(('s', 'x', 'z', 'ch')):
-        return word + 'es'
-    elif word.endswith('y') and word[-2] in consonants:
-        word[-1] = 'i'
-        return word + 'es'
-    elif word.endswith('o') and word[-2] in consonants:
-        return word + 'es'
-    elif word.endswith('f'):
-        word = word.rstrip('f')
-        return word + 'ves'
-    elif word.endswith('fe'):
-        word = word.rstrip('fe')
-        return word + 'ves'
-    else:
-        return word + 's'
-
-
-class DictTree(collections.UserDict):
-    def __init__(self, data=None):
-        super().__init__()
-        if data is not None:
-            self.data = data
-
-    def __getitem__(self, key):
-        node = self.data
-        for k in key:
-            node = node[k]
-        return node
-
-    def __setitem__(self, key, value):
-        node = self.data
-        for k in key[:-1]:
-            node = node.setdefault(k, {})
-        node[key[-1]] = value
-
-
-class ProxyDict:
-    def __init__(self, master, delayed_writeback=True, **_map):
-        self.delayed_writeback = delayed_writeback
-        self.master = master
-        if delayed_writeback:
-            self.front = collections.ChainMap({}, master)
-        else:
-            self.front = master
-        self.map = _map
-
-    def __getitem__(self, key):
-        return self.front[self.map[key]]
-
-    def __setitem__(self, key, value):
-        self.front[self.map[key]] = value
-
-    def keys(self):
-        return self.map.keys()
-
-    def values(self):
-        return (self[k] for k in self.keys())
-
-    def items(self):
-        return ((k, self[k]) for k in self.keys())
-
-    def __iter__(self):
-        return iter(self.keys())
-
-    def writeback(self):
-        if self.delayed_writeback:
-            self.master.update(self.front.maps[0])
-
-
 # noinspection PyUnusedLocal
-class GUI(object):
+class App(Gtk.Application):
 
-    def __init__(self, us_se, th, extras):
+    def __init__(self, us_se):
+        super().__init__(application_id="com.github.c2n14.automathemely",
+                         flags=Gio.ApplicationFlags.FLAGS_NONE)
+
+        self.main_window = None
+        self.us_se = us_se
+
+    #       BASIC Gtk.Application FUNCTIONS
+    # noinspection PyAttributeOutsideInit
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+        self.builder = Gtk.Builder()
+        self.builder.add_from_file(get_resource('manager_gui.glade'))
+        self.builder.set_application(self)
+        self.builder.connect_signals(self)
+
+        self.extras = dict()
+        for k, v in self.us_se['extras'].items():
+            if v['enabled']:
+                get_default = False
+            else:
+                get_default = True
+            out = extratools.get_extra_themes(k, get_default)
+            self.extras[k] = out[0]
+
+        self.system_themes = get_installed_themes()
+        self.listen_changes = False
+        self.saved_settings = False
+        self.entries_error = list()
+        self.changed = list()
+
         css = b'''.frame-row{
                 background-color: @base_color;
             }
@@ -141,247 +122,232 @@ class GUI(object):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-        self.th = th
-        self.extras = extras
-        self.builder = Gtk.Builder()
-        self.builder.add_from_file(get_resource('manager_gui.glade'))
-        self.builder.connect_signals(self)
+        #   Override the quit menu
+        action = Gio.SimpleAction.new("quit", None)
+        action.connect("activate", self.on_confirm_exit)
+        self.add_action(action)
 
-        self.main_window = self.builder.get_object("main_window")
-        self.main_window.set_title('AutomaThemely Settings')
-        self.main_window.set_icon_from_file(get_resource('automathemely.svg'))
-        self.confirm_dialog = self.builder.get_object('confirm_dialog')
-        self.confirm_dialog.set_transient_for(self.main_window)
-        self.error_dialog = self.builder.get_object('error_dialog')
-        self.error_dialog.set_transient_for(self.main_window)
+    # noinspection PyAttributeOutsideInit
+    def do_activate(self):
+        #   Called on primary instance activation
+        #   Kinda like do_startup but after the window is displayed
+        if not self.main_window:
+            self.main_window = self.builder.get_object('main_window')
+            self.main_window.set_application(self)
+            self.main_window.set_title('AutomaThemely Settings')
+            self.main_window.set_icon_from_file(get_resource('automathemely.svg'))
 
-        self.fix_hint_link()
-        self.fix_labels()
+            sub_w_list = ['confirm_dialog', 'error_dialog']
+            self.sub_windows = dict()
+            for w in sub_w_list:
+                self.sub_windows[w] = self.builder.get_object(w)
+                self.sub_windows[w].set_transient_for(self.main_window)
 
-        self.us_se = us_se
-        self.us_se_tree = DictTree(us_se)
-        self.us_se_dict = ProxyDict(
-            self.us_se_tree,
-            light_theme_box=('themes', 'light'),
-            dark_theme_box=('themes', 'dark'),
-            sunrise_spin=('offset', 'sunrise'),
-            sunset_spin=('offset', 'sunset'),
-            autolocation_inverse_switch=('location', 'auto_enabled'),
-            manual_city_entry=('location', 'manual', 'city'),
-            manual_region_entry=('location', 'manual', 'region'),
-            manual_latitude_entry_float=('location', 'manual', 'latitude'),
-            manual_longitude_entry_float=('location', 'manual', 'longitude'),
-            manual_timezone_entry=('location', 'manual', 'time_zone'),
-            notification_switch=('misc', 'notifications'),
-            # Extras
-            autoatom_extra_switch=('extras', 'atom', 'enabled'),
-            atom_light_theme_extra_box=('extras', 'atom', 'themes', 'light', 'theme'),
-            atom_light_syntax_extra_box=('extras', 'atom', 'themes', 'light', 'syntax'),
-            atom_dark_theme_extra_box=('extras', 'atom', 'themes', 'dark', 'theme'),
-            atom_dark_syntax_extra_box=('extras', 'atom', 'themes', 'dark', 'syntax'),
-            autovscode_extra_switch=('extras', 'vscode', 'enabled'),
-            vscode_light_theme_extra_box=('extras', 'vscode', 'themes', 'light'),
-            vscode_dark_theme_extra_box=('extras', 'vscode', 'themes', 'dark')
-        )
-        self.changed = []
+            self.set_all()
+            self.listen_changes = True
 
-        self.listen_changes = False
-        self.entries_error = []
-        self.set_all()
+        self.main_window.present()
 
-        self.main_window.show_all()
+    def do_shutdown(self):
+        Gtk.Application.do_shutdown(self)
 
-    #   Set GUI to match with the user's setting
+        #   Dump file
+        if self.changed and self.saved_settings:
+            with open(get_local('user_settings.json'), 'w') as file:
+                json.dump(self.us_se, file, indent=4)
+            exit_message = 'Successfully saved settings'
+        else:
+            exit_message = 'No changes were made'
+
+        #   As it skips over argmanager, it needs to handle exit notifications by itself
+        if self.us_se['misc']['notifications']:
+            notify(exit_message)
+        print(exit_message)
+
+    #      CALLED ON PRIMARY ACTIVATION
     def set_all(self):
-        for k in self.us_se_dict:
-            v = self.us_se_dict[k]
-            if k.endswith('entry'):
-                self.builder.get_object(k).set_text(str(v))
+        for obj in self.builder.get_objects():
+            obj_id = Gtk.Buildable.get_name(obj)
+            if '___object_' not in obj_id:
+                obj_type = obj.get_name()
+                obj_name, obj_attr = split_name_attr(obj_id)
 
-            elif k.endswith('entry_float'):
-                self.builder.get_object(k).set_text(str(v))
+                #   These don't contain data
+                if obj_type == 'GtkLabel':
+                    if obj_name.startswith('row_label'):
+                        # This could change to be more in line with the official GNOME style standards
+                        obj.set_alignment(0, 0.5)
 
-            elif k.endswith('spin'):
-                self.builder.get_object(k).configure(
-                    Gtk.Adjustment(value=v, lower=-999, upper=999, step_increment=1, page_increment=5, page_size=0), 1,
-                    0)
+                elif obj_type == 'GtkLinkButton':
+                    obj.set_label("HINT: You can get most of this info at https://ipinfo.io/json")
 
-            elif k.endswith('extra_box'):
-                self.set_extra_box(k, v)
+                #   These DO contain data
+                elif obj_type in ['GtkEntry', 'GtkSpinButton', 'GtkSwitch', 'GtkComboBoxText']:
+                    keys = obj_name.split('.')
+                    val = read_dict(self.us_se, keys)
 
-            elif k.endswith('box'):
-                if v in self.th:
-                    index = self.th.index(v)
-                else:
-                    index = -1
-                box = self.builder.get_object(k)
-                for i, val in enumerate(self.th):
-                    box.insert(i, str(i), val)
-                box.set_active_id(str(index))
+                    if obj_type == 'GtkEntry':
+                        obj.set_text(try_or_default_type(val, str))
 
-            elif k.endswith('switch'):
-                switch = self.builder.get_object(k)
-                if self.us_se_dict[k]:
-                    switch.set_active(True)
-                    if k.startswith('auto'):
-                        self.on_frame_toggle(switch)
-                else:
-                    switch.set_active(False)
-                    if k.startswith('auto'):
-                        self.on_frame_toggle(switch)
-        #   Start listening for changes
-        self.listen_changes = True
+                    elif obj_type == 'GtkSpinButton':
+                        obj.configure(Gtk.Adjustment(value=try_or_default_type(val, int), lower=-999, upper=999,
+                                                     step_increment=1, page_increment=5, page_size=0), 1, 0)
+                    elif obj_type == 'GtkSwitch':
+                        if val:
+                            obj.set_active(True)
+
+                        if obj_attr and 'frame' in obj_attr:
+                            self.on_frame_toggle(obj)
+
+                    elif obj_type == 'GtkComboBoxText':
+                        if 'extras' in obj_attr:
+                            self.set_extra_box(obj)
+
+                        elif 'gtk' in obj_attr:
+                            if val in self.system_themes:
+                                index = self.system_themes.index(val)
+                            else:
+                                index = -1
+                            for i, val in enumerate(self.system_themes):
+                                obj.insert(i, str(i), val)
+                            obj.set_active_id(str(index))
 
     #   Needs to be separate so it can be called in on_enable_extra_mid_run
-    def set_extra_box(self, k, v):
-        extra = k.split('_')[0]
-        t = common_plural(k.split('_')[-3])
-        if v in self.extras[extra][t]:
-            index = self.extras[extra][t].index(v)
+    def set_extra_box(self, box):
+        box_id = Gtk.Buildable.get_name(box)
+        box_name = box_id.split('~')[0]
+        box_attr = box_id.split('~')[1]
+
+        keys = box_name.split('.')
+        val = read_dict(self.us_se, keys)
+
+        extra_type = box_attr.split('-')[-1]
+        theme_type = box_attr.split('-')[-2]
+
+        if val in self.extras[extra_type][theme_type]:
+            index = self.extras[extra_type][theme_type].index(val)
         else:
             index = -1
 
-        box = self.builder.get_object(k)
-        for i, val in enumerate(self.extras[extra][t]):
+        for i, val in enumerate(self.extras[extra_type][theme_type]):
             box.insert(i, str(i), val)
         box.set_active_id(str(index))
 
-    #   FIXES for stuff that couldn't be done in Glade
-    def fix_hint_link(self):
-        hint_link = self.builder.get_object('hint_link')
-        hint_link.set_label("HINT: You can get most of this info at https://ipinfo.io/json")
+    #       HANDLERS
+    def on_frame_toggle(self, switch, *args):
+        switch_id = Gtk.Buildable.get_name(switch).split('~')
+        switch_name = switch_id[0]
+        switch_attr = switch_id[1]
+        frame_name = '{}_toggleframe'.format('_'.join(switch_name.split('.')[:-1]))
+        frame = self.builder.get_object(frame_name)
 
-    def fix_labels(self):
-        i = 0
-        while True:
-            label = self.builder.get_object('row_label{}'.format(i + 1))
-            if label:
-                #   Label alignment could change in the future
-                label.set_alignment(0, 0.5)
-                i += 1
-            else:
-                break
-
-    #   HANDLERS
-    def on_frame_toggle(self, switch, state=None):
-        frame_name = Gtk.Buildable.get_name(switch).replace('switch', 'toggle_frame')
-
-        if 'inverse' in frame_name:
-            active = True
+        if 'inverse' in switch_attr:
+            disable = True
         else:
-            active = False
+            disable = False
 
         if switch.get_active():
-            self.builder.get_object(frame_name).set_sensitive(not active)
+            frame.set_sensitive(not disable)
         else:
-            self.builder.get_object(frame_name).set_sensitive(active)
+            frame.set_sensitive(disable)
+
+    def on_enable_extra_mid_run(self, switch, *args):
+        if self.listen_changes and switch.get_active():
+            switch_id = Gtk.Buildable.get_name(switch)
+            switch_name = switch_id.split('~')[0]
+            extra_type = switch_name.split('.')[-2]
+
+            empty = False
+            for t, val in self.extras[extra_type].items():
+                if not val:
+                    empty = True
+
+            if empty:
+                out, is_error = extratools.get_extra_themes(extra_type)
+                if is_error:
+                    switch.set_active(False)
+                    self.on_frame_toggle(switch)
+                    switch.set_sensitive(False)
+                else:
+                    self.extras[extra_type] = out
+
+                    for obj in self.builder.get_objects():
+                        obj_id = Gtk.Buildable.get_name(obj)
+                        obj_type = obj.get_name()
+                        if obj_id.startswith('extras.{}'.format(extra_type)) and obj_type == 'GtkComboBoxText':
+                            self.set_extra_box(obj)
 
     #   Multipurpose handle referenced on on_save_settings
-    def on_any_change(self, emitter, state=None, output=False):
-        emitter_name = Gtk.Buildable.get_name(emitter)
+    def on_any_change(self, emitter, *args, output=False):
         if self.listen_changes:
+            emitter_id = Gtk.Buildable.get_name(emitter)
             emitter_data = None
-            if not (emitter_name in self.changed):
-                self.changed.append(emitter_name)
-            elif emitter_name in self.changed:
-                if isinstance(emitter, gi.repository.Gtk.ComboBoxText):
+            if not (emitter_id in self.changed):
+                self.changed.append(emitter_id)
+            elif emitter_id in self.changed:
+                emitter_type = emitter.get_name()
+                if emitter_type == 'GtkComboBoxText':
                     emitter_data = emitter.get_active_text()
-                elif isinstance(emitter, gi.repository.Gtk.Switch):
+                elif emitter_type == 'GtkSwitch':
                     emitter_data = emitter.get_active()
-                elif isinstance(emitter, gi.repository.Gtk.SpinButton):
+                elif emitter_type == 'GtkSpinButton':
                     emitter_data = emitter.get_value_as_int()
-                elif isinstance(emitter, gi.repository.Gtk.Entry):
+                elif emitter_type == 'GtkEntry':
                     text = emitter.get_text()
-                    if 'float' in emitter_name and isfloat(text):
+                    if 'float' in emitter_id and isfloat(text):
                         emitter_data = float(text)
                     else:
                         emitter_data = text
 
                 if output:
                     return emitter_data
-                else:
-                    if emitter_data == self.us_se_dict[emitter_name]:
-                        self.changed.remove(emitter_name)
 
-    #   This shouldn't be a separate function but if added to on_any_change it stops working reliably
-    def on_float_entry_change(self, emitter):
+                else:
+                    emitter_name = split_name_attr(emitter_id)[0]
+
+                    if emitter_data == read_dict(self.us_se, emitter_name.split('.')):
+                        self.changed.remove(emitter_id)
+
+    def on_float_entry_change(self, emitter, *args):
         text = emitter.get_text()
+        emitter_id = Gtk.Buildable.get_name(emitter)
         if text.strip() == '' or not isfloat(text):
             emitter.set_icon_from_stock(0, 'gtk-dialog-error')
             emitter.set_icon_tooltip_text(0, 'Input should not be empty and contain only valid decimal (float) numbers')
-            if Gtk.Buildable.get_name(emitter) not in self.entries_error:
+            if emitter_id not in self.entries_error:
                 self.entries_error.append(Gtk.Buildable.get_name(emitter))
         elif emitter.get_icon_stock(0) == 'gtk-dialog-error':
             emitter.set_icon_from_stock(0, None)
-            self.entries_error.remove(Gtk.Buildable.get_name(emitter))
-
-    def on_enable_extra_mid_run(self, switch, state=None):
-        if self.listen_changes:
-            extra = Gtk.Buildable.get_name(switch).split('_')[0].replace('auto', '', 1)
-            if switch.get_active():
-                empty = False
-                for t, val in self.extras[extra].items():
-                    if not val:
-                        empty = True
-
-                if empty:
-                    th, is_error = extratools.get_extra_themes(extra)
-                    if is_error:
-                        switch.set_active(False)
-                        self.on_frame_toggle(switch)
-                        switch.set_sensitive(False)
-                    else:
-                        self.extras[extra] = th
-                        for k in self.us_se_dict:
-                            if k.startswith(extra):
-                                v = self.us_se_dict[k]
-                                self.set_extra_box(k, v)
+            self.entries_error.remove(emitter_id)
 
     def on_confirm_exit(self, *args):
         if self.changed:
-            response = self.confirm_dialog.run()
+            response = self.sub_windows['confirm_dialog'].run()
             #   This should be destroy() but for some reason it won't work again once it's called
-            self.confirm_dialog.hide()
+            self.sub_windows['confirm_dialog'].hide()
             if response == Gtk.ResponseType.YES:
-                Gtk.main_quit(*args)
+                self.quit()
             elif response == Gtk.ResponseType.NO:
                 self.on_save_settings()
                 return True
         else:
-            Gtk.main_quit(*args)
+            self.quit()
 
+    # noinspection PyAttributeOutsideInit
     def on_save_settings(self, *args):
         if self.entries_error:
-            self.error_dialog.run()
+            self.sub_windows['error_dialog'].run()
             #   This should also be destroy()
-            self.error_dialog.hide()
+            self.sub_windows['error_dialog'].hide()
         else:
             for change in self.changed:
-                self.us_se_dict[change] = self.on_any_change(self.builder.get_object(change), None, True)
-            self.us_se_dict.writeback()
-            Gtk.main_quit(*args)
+                change_name = split_name_attr(change)[0]
+                change_obj = self.builder.get_object(change)
+                write_dic(self.us_se, change_name.split('.'), self.on_any_change(change_obj, output=True))
+            self.saved_settings = True
+            self.quit()
 
-    def return_settings(self):
-        return self.us_se
 
-
-def main(us_se):
-    # All paths that I know of that can contain GTK themes
-    gtk_paths = [
-        '/usr/share/themes/',
-        os.path.join(Path.home(), '.themes/'),
-        os.path.join(Path.home(), '.local/share/themes/')
-    ]
-    th = get_installed_themes(gtk_paths)
-    extras = dict()
-
-    for k, v in us_se['extras'].items():
-        default = True
-        if v['enabled']:
-            default = False
-        out, is_error = extratools.get_extra_themes(k, default)
-        extras.update({k: out})
-
-    settings = GUI(us_se, th, extras).return_settings()
-    Gtk.main()
-    return settings
+def main(user_settings):
+    app = App(user_settings)
+    app.run()

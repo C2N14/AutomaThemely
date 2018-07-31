@@ -18,7 +18,6 @@ with open('README.md') as fh:
 
 setup(
     name='AutomaThemely',
-    #version=version,
     version=1.15,
     description='Simple, set-and-forget python application for changing between GNOME themes according to light and '
                 'dark hours',
