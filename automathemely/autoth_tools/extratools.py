@@ -55,7 +55,7 @@ def get_extra_themes(extra, placeholder=False):
         #   All possible paths that I know of that can contain VSCode extensions
         vscode_extensions_paths = ['/snap/vscode/current/usr/share/code/resources/app/extensions',
                                    '/usr/share/code/resources/app/extensions',
-                                   os.path.join(Path.home(), '.vscode/extensions')]
+                                   os.path.join(str(Path.home()), '.vscode/extensions')]
         vscode_themes = []
         for p in vscode_extensions_paths:
             vscode_themes += scan_vscode_extensions(p)

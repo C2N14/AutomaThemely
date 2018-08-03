@@ -23,8 +23,8 @@ def get_installed_themes():
     # All paths that I know of that can contain GTK themes
     gtk_paths = [
         '/usr/share/themes/',
-        os.path.join(Path.home(), '.themes/'),
-        os.path.join(Path.home(), '.local/share/themes/')
+        os.path.join(str(Path.home()), '.themes/'),
+        os.path.join(str(Path.home()), '.local/share/themes/')
     ]
     for directory in gtk_paths:
         t = [d.replace(directory, '').replace('/', '') for d in glob('{}*/'.format(directory))]

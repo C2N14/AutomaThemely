@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 _ROOT = os.path.abspath(os.path.dirname(__file__))
-__version__ = 1.1
+__version__ = 1.2
 
 
 def get_resource(path=''):

@@ -6,7 +6,7 @@ Exec=automathemely
 Icon=automathemely
 Terminal=false
 StartupNotify=false
-Actions=Manage;Update;
+Actions=Manage;Update;Restart;
 
 [Desktop Action Manage]
 Exec=automathemely --manage
@@ -15,3 +15,7 @@ Name=Manage settings
 [Desktop Action Update]
 Exec=automathemely --update
 Name= Update sun times
+
+[Desktop Action Restart]
+Exec=automathemely --restart
+Name= Restart the scheduler

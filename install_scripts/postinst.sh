@@ -1,7 +1,7 @@
 #!/bin/bash
 
-packdir="$(pip3 show automathemely | grep -oP "^Location: \K.*")/automathemely"
 USER_HOME="$(getent passwd $SUDO_USER | cut -d: -f6)"
+packdir="$(sudo -u ${SUDO_USER} python3 -m pip show automathemely | grep -oP "^Location: \K.*")/automathemely"
 
 if_not_dir_create () {
   if [ ! -d "$1" ]; then
@@ -59,4 +59,4 @@ sudo -E -u $SUDO_USER systemctl --user --global start automathemely.timer
 # REMOVE OBSOLETE STUFF
 # Crontab removal
 # If crontabs are not installed carries on
-crontab -u $SUDO_USER -l | awk ' !/sunrise_change_theme/ && !/sunset_change_theme/ && !/update_sunhours_daily/ && !/update_sunhours_reboot/ { print }' | crontab -u $SUDO_USER -
+(crontab -u $SUDO_USER -l | awk ' !/sunrise_change_theme/ && !/sunset_change_theme/ && !/update_sunhours_daily/ && !/update_sunhours_reboot/ { print }' | crontab -u $SUDO_USER -) || true

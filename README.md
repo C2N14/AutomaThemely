@@ -1,5 +1,5 @@
 
-![](automathemely/lib/automathemely_large.svg)
+![AutomaThemely icon](automathemely/lib/automathemely_large.svg)
 
 # AutomaThemely
 
@@ -9,41 +9,40 @@ Simple, set-and-forget python application for changing between GNOME themes acco
 
 ### Prerequisites
 
-* Obviously having the GNOME desktop environment (or maybe not, see [notes](#notes) for more info)
+* Obviously having the GNOME desktop environment
 * Python 3.5+
-* Crontab
-* GTK+ 3.0+ (optional for the moment, for the settings manager GUI)
-* pip3 (optional, for installation)
+* GTK 3.0+
+* pip3 (will be installed if package with dependencies is installed, otherwise it must be manually installed)
 
 ### Installing
 
-**[RECOMMENDED]** You can go to [releases](https://github.com/C2N14/AutomaThemely/releases) and download whichever package suits your needs
+You can go to [releases](https://github.com/C2N14/AutomaThemely/releases) and download whichever package suits your needs
 
-Or clone the project and install it yourself (icons and shortcuts will not be installed)
+Because of the several python versions different distros have, here are my recommendations for the following distros:
 
-```
-git clone https://github.com/C2N14/AutomaThemely.git
-cd AutomaThemely
-python3 setup.py install
-```
+| Distro | Recommendation |
+| --- | --- |
+| Ubuntu 16.04 | Manually install all the python dependencies with pip3 and install the python 3.5 no dependencies package |
+| Ubuntu 18.04 | Just install the regular python 3.6 package and all the dependencies should be available |
+| Other distros | Check your python version, and if it is equal or above 3.5 but not listed in the releases page you can try [packaging it yourself](https://github.com/C2N14/AutomaThemely/wiki/Packaging-it-yourself)
 
 ### Running
 
 Once installed, run once to generate a settings file
 
-```
+```bash
 automathemely
 ```
 
 And then run again with `-m` or `--manage` use the settings manager (requires GTK 3.0+)
 
-```
+```bash
 automathemely --manage
 ```
 
 Or manually set the settings with `-s` or `--setting` if you somehow don't have GTK in your system
 
-```
+```bash
 # To show all the available options
 automathemely --list
 # For example:
@@ -52,26 +51,26 @@ automathemely --setting themes.light=Adwaita
 
 Or you can even manually edit the configuration file in `/home/user/.config/AutomaThemely`
 
-Finally, update all the necessary crontabs to make sure it runs at the right hours
+Finally, you can either restart your computer or run the following to make sure it runs at the right hours and also start the scheduler so it starts working
 
-```
+```bash
+# Update sunrise and sunset times
 automathemely --update
+# Start the scheduler
+automathemely --restart
 ```
 
-### Adding to startup/login
-
-If you are like most users and don't leave your computer on 24/7, you should most likely add it to startup to get the most out of it (that is, if you don't want to run it everytime you login). Depending on your distro this instructions will be different. For Ubuntu and other similar systems you can follow [these instructions](https://askubuntu.com/questions/48321/how-do-i-start-applications-automatically-on-login)  
+And that's it!
 
 ### Running it manually
 
-In the case of it failing to do its job (please report to [issues](https://github.com/C2N14/AutomaThemely/issues)) you can always run it manually to try to fix it by running `automathemely` or by the icon on the application tray
+In the case of it failing to do its job (please report to [issues](https://github.com/C2N14/AutomaThemely/issues)) you can always try to restart the scheduler or run it manually to try to fix it by running `automathemely` or by the icon on the application tray
 
 ## Notes
 
 * This program assumes that a day in your location has both sunrise and sunset in the same 0 to 24 hr day span, and if you decide to set a custom time offset make sure both of these events still occur within this span
-* Although it is specifically made for GNOME, it should be compatible with Unity and other GNOME based environments, and other desktop environments *could* be implemented in the future.
+* Although it is specifically made for GNOME, it should be compatible with Unity and other GNOME based environments.
 * This program requires an active internet connection **ONLY** if you set *Auto Location* on (it uses your ip to determine your geolocation), otherwise you can manually set your location and you won't need it.
-* You should never really manually edit the version number on the configuration file because it will most likely be overwritten 
 * Tested with Ubuntu 18.04 & Ubuntu 16.04
 * Yeah, yeah, I know that icon is an eyesore but I'm no designer so it'll have to do until a better one is made ¯\\\_(ツ)_/¯
 
