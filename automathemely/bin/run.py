@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytz
 import tzlocal
+import collections
 
 from automathemely import get_resource, get_local, notify, __version__ as version
 
@@ -31,6 +32,15 @@ def notify_print_exit(message, enabled, exit_after=True, is_error=False):
         print(message)
 
 
+def update_dict(d, u):
+    for k, v in u.items():
+        if isinstance(v, collections.Mapping):
+            d[k] = update_dict(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
+
+
 def main():
     check_root()
 
@@ -38,7 +48,7 @@ def main():
     workspace = Path(os.path.dirname(os.path.realpath(__file__)))
     os.chdir(str(workspace))
     sys.path.append('..')
-    import autoth_tools
+    from automathemely import autoth_tools
 
     #   Test for settings file and if it doesn't exist copy it from defaults
     if not Path(get_local('user_settings.json')).is_file():
@@ -58,8 +68,20 @@ def main():
     if 'version' not in user_settings or user_settings['version'] != version:
         with open(get_resource('default_user_settings.json'), 'r') as f:
             default_settings = json.load(f)
-        default_settings.update(user_settings)
-        user_settings = default_settings
+
+        # Hardcoded attempt to try to import old structure to new structure
+        if user_settings['version'] <= 1.2:
+            user_settings['themes']['gnome'] = dict()
+            user_settings['themes']['gnome']['light'],  user_settings['themes']['gnome']['dark'] = dict(), dict()
+            user_settings['themes']['gnome']['light']['gtk'] = user_settings['themes']['light']
+            user_settings['themes']['gnome']['dark']['gtk'] = user_settings['themes']['dark']
+            try:
+                del user_settings['themes']['light']
+                del user_settings['themes']['dark']
+            except KeyError:
+                pass
+
+        user_settings = update_dict(default_settings, user_settings)
         user_settings['version'] = version
 
     n_enabled = user_settings['misc']['notifications']

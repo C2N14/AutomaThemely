@@ -7,7 +7,7 @@ from subprocess import check_output, CalledProcessError
 
 #   For getting vscode themes
 def scan_vscode_extensions(path):
-    th = []
+    t_list = []
     try:
         for k in next(os.walk(path))[1]:
             if 'theme' in k:
@@ -16,43 +16,44 @@ def scan_vscode_extensions(path):
                     if 'themes' in data['contributes']:
                         for i in data['contributes']['themes']:
                             if 'id' in i:
-                                th.append(i['id'])
+                                t_list.append(i['id'])
                             elif 'label' in i:
-                                th.append(i['label'])
+                                t_list.append(i['label'])
     except StopIteration:
         pass
-    return th
+
+    list.sort(t_list)
+    themes = []
+    for name in t_list:
+        themes.append({'name': name})
+    return themes
 
 
-def get_extra_themes(extra, placeholder=False):
+# Should be delayed and avoided as much as possible...
+def get_extra_themes(extra):
     if extra == 'atom':
-        default = dict(themes=[], syntaxes=[])
-        if placeholder:
-            return default, True
         try:
             atom_packs = check_output('apm list --themes --bare', shell=True).decode('utf-8')
         except CalledProcessError:
-            return default, True
+            return
 
         atom_packs = atom_packs.split('\n')
         for i, v in enumerate(atom_packs):
             atom_packs[i] = v.split('@')[0]
         atom_packs = list(filter(None, atom_packs))
-        atom_themes = []
-        atom_syntaxes = []
+        list.sort(atom_packs)
+        themes = []
+        syntaxes = []
         for v in atom_packs:
             if 'syntax' in v:
-                atom_syntaxes.append(v)
+                syntaxes.append({'name': v})
             else:
-                atom_themes.append(v)
-        return {'themes': sorted(atom_themes), 'syntaxes': sorted(atom_syntaxes)}, False
+                themes.append({'name': v})
+        return {'themes': themes, 'syntaxes': syntaxes}
 
     if extra == 'vscode':
-        default = dict(themes=[])
-        if placeholder:
-            return default, True
 
-        #   All possible paths that I know of that can contain VSCode extensions
+        # All possible paths that I know of that can contain VSCode extensions
         vscode_extensions_paths = ['/snap/vscode/current/usr/share/code/resources/app/extensions',
                                    '/usr/share/code/resources/app/extensions',
                                    os.path.join(str(Path.home()), '.vscode/extensions')]
@@ -61,10 +62,10 @@ def get_extra_themes(extra, placeholder=False):
             vscode_themes += scan_vscode_extensions(p)
 
         if not vscode_themes:
-            return default, True
+            return
 
         else:
-            return {'themes': sorted(vscode_themes)}, False
+            return {'themes': vscode_themes}
 
 
 def set_extra_theme(us_se, extra, theme_type):

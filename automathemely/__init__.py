@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 _ROOT = os.path.abspath(os.path.dirname(__file__))
-__version__ = 1.2
+__version__ = 1.25
 
 
 def get_resource(path=''):
@@ -33,7 +33,9 @@ def notify(message):
     try:  # I don't even know... https://bugzilla.redhat.com/show_bug.cgi?id=1582833
         n.show()
     except GLib.GError as e:
-        if str(e) != 'g-dbus-error-quark: Unexpected reply type (16)':
+        if str(e) != 'g-dbus-error-quark: Unexpected reply type (16)' \
+                and str(e) != 'g-dbus-error-quark: GDBus.Error:org.freedesktop.DBus.Error.NoReply: Message recipient ' \
+                              'disconnected from message bus without replying (4)':
             raise e
 
 
@@ -44,7 +46,7 @@ def pgrep(process_name, use_full=False):
         command.append('-f')
     command.append(process_name)
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
-    if p.wait() == 0:  # I. e. if return: code == 0
+    if p.wait() == 0:  # I. e. if return code == 0
         return True
     else:
         return False

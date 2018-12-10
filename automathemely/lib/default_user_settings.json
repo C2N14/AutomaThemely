@@ -1,8 +1,53 @@
 {
-    "version": 1.2,
+    "version": 1.25,
+    "desktop_environment": "custom",
     "themes": {
-        "light": "",
-        "dark": ""
+        "gnome": {
+            "light": {
+                "gtk": "",
+                "icons": "",
+                "shell": ""
+            },
+            "dark": {
+                "gtk": "",
+                "icons": "",
+                "shell": ""
+            }
+        },
+        "kde": {
+            "light": {
+                "plasma": "",
+                "gtk": "",
+                "icons": ""
+            },
+            "dark": {
+                "plasma": "",
+                "gtk": "",
+                "icons": ""
+            }
+        },
+        "xfce": {
+            "light": {
+                "gtk": "",
+                "icons": ""
+            },
+            "dark": {
+                "gtk": "",
+                "icons": ""
+            }
+        },
+        "cinnamon": {
+            "light": {
+                "gtk": "",
+                "desktop": "",
+                "icons": ""
+            },
+            "dark": {
+                "gtk": "",
+                "desktop": "",
+                "icons": ""
+            }
+        }
     },
     "offset": {
         "sunrise": 0,
@@ -40,6 +85,22 @@
             "themes": {
                 "light": "",
                 "dark": ""
+            }
+        },
+        "commands": {
+            "sunrise": {
+                "1": "",
+                "2": "",
+                "3": "",
+                "4": "",
+                "5": ""
+            },
+            "sunset": {
+                "1": "",
+                "2": "",
+                "3": "",
+                "4": "",
+                "5": ""
             }
         }
     }

@@ -3,34 +3,13 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 # noinspection PyPep8
-from gi.repository import Gtk, Gio, Gdk
+from gi.repository import Gtk, Gio
 # noinspection PyPep8
 from automathemely import get_resource, get_local, notify
 # noinspection PyPep8
-from automathemely.autoth_tools import extratools
-# noinspection PyPep8
-import os
-# noinspection PyPep8
-from pathlib import Path
-# noinspection PyPep8
-from glob import glob
+from automathemely.autoth_tools import extratools, envspecific
 # noinspection PyPep8
 import json
-
-
-def get_installed_themes():
-    themes = []
-    # All paths that I know of that can contain GTK themes
-    gtk_paths = [
-        '/usr/share/themes/',
-        os.path.join(str(Path.home()), '.themes/'),
-        os.path.join(str(Path.home()), '.local/share/themes/')
-    ]
-    for directory in gtk_paths:
-        t = [d.replace(directory, '').replace('/', '') for d in glob('{}*/'.format(directory))]
-        themes += t
-    themes.sort()
-    return themes
 
 
 def read_dict(dic, keys):
@@ -45,13 +24,15 @@ def write_dic(dic, keys, value):
     dic[keys[-1]] = value
 
 
-def split_name_attr(obj_id):
+def split_id_delimiter(obj_id):
+    obj_id = obj_id.lstrip('*')
     if '~' in obj_id:
         return obj_id.split('~')
     else:
         return obj_id, None
 
 
+# Handle unexpected or invalid values in user_settings
 def try_or_default_type(val, try_type):
     try:
         return try_type(val)
@@ -62,6 +43,8 @@ def try_or_default_type(val, try_type):
             return 0
         elif try_type == float:
             return 0.0
+        elif try_type == bool:
+            return False
         else:
             return None
 
@@ -73,6 +56,59 @@ def isfloat(value):
     except ValueError:
         return False
 
+
+# noinspection PyUnusedLocal
+def get_object_data(obj, *args):
+    if isinstance(obj, Gtk.ComboBoxText):
+        return obj.get_active_id()
+    elif isinstance(obj, Gtk.Switch):
+        return obj.get_active()
+    elif isinstance(obj, Gtk.SpinButton):
+        return obj.get_value_as_int()
+    elif isinstance(obj, Gtk.Entry):
+        text = obj.get_text()
+        if obj.get_name() == 'float_only' and isfloat(text):
+            return float(text)
+        else:
+            return text
+
+
+def scan_combobox_descendants(obj, match):
+    try:
+        children = obj.get_children()
+    except AttributeError:
+        return
+    else:
+        if children:
+            comboboxes = []
+            for child in children:
+                scan = scan_combobox_descendants(child, match)
+                if scan:
+                    comboboxes.extend(scan)
+            return comboboxes
+        elif isinstance(obj, Gtk.ComboBoxText) and match in Gtk.Buildable.get_name(obj):
+            return [obj]
+
+
+def display_row_separators(row, before):
+    if before:
+        row.set_header(Gtk.Separator())
+
+
+########
+# This is a kind of weird system, but bear with me...
+#
+# GTk.Buildable.get_name() gets what is displayed as WIDGET ID in Glade
+# obj.get_name() gets what is displayed as WIDGET NAME in Glade
+#
+# In data containing widgets (ID starts with an *):
+
+# The widget ID is used for widget OUTPUT, i.e. value or PATH it isrelated to in user_settings, if there is a
+# delimiter (~) it will also indicate which part of the GUI it affects (its SUBORDINATE), like in enabler switches
+#
+# The widget NAME is used for special attributes dependant on the type of
+# widget, such as if it is float only in entries or what it will be populated with in combo boxes
+########
 
 # noinspection PyUnusedLocal
 class App(Gtk.Application):
@@ -93,34 +129,15 @@ class App(Gtk.Application):
         self.builder.set_application(self)
         self.builder.connect_signals(self)
 
+        # This does not get initialized until needed
         self.extras = dict()
-        for k, v in self.us_se['extras'].items():
-            if v['enabled']:
-                get_default = False
-            else:
-                get_default = True
-            out = extratools.get_extra_themes(k, get_default)
-            self.extras[k] = out[0]
 
-        self.system_themes = get_installed_themes()
+        self.system_themes = envspecific.get_themes(self.us_se['desktop_environment'])
+
         self.listen_changes = False
         self.saved_settings = False
         self.entries_error = list()
         self.changed = list()
-
-        css = b'''.frame-row{
-                background-color: @base_color;
-            }
-
-            .no-bottom border{
-                border-bottom: none;
-            }'''
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_data(css)
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
 
         #   Override the quit menu
         action = Gio.SimpleAction.new("quit", None)
@@ -143,7 +160,7 @@ class App(Gtk.Application):
                 self.sub_windows[w] = self.builder.get_object(w)
                 self.sub_windows[w].set_transient_for(self.main_window)
 
-            self.set_all()
+            self.setup_all()
             self.listen_changes = True
 
         self.main_window.present()
@@ -164,161 +181,182 @@ class App(Gtk.Application):
             notify(exit_message)
         print(exit_message)
 
-    #      CALLED ON PRIMARY ACTIVATION
-    def set_all(self):
+    #      MISC
+    # Called on primary activation
+    def setup_all(self):
         for obj in self.builder.get_objects():
-            obj_id = Gtk.Buildable.get_name(obj)
+            try:
+                obj_id = Gtk.Buildable.get_name(obj)
+            except TypeError:
+                continue
+
+            # Filter out non-relevant objects
             if '___object_' not in obj_id:
-                obj_type = obj.get_name()
-                obj_name, obj_attr = split_name_attr(obj_id)
 
                 #   These don't contain data
-                if obj_type == 'GtkLabel':
-                    if obj_name.startswith('row_label'):
-                        # This could change to be more in line with the official GNOME style standards
-                        obj.set_alignment(0, 0.5)
-
-                elif obj_type == 'GtkLinkButton':
+                if isinstance(obj, Gtk.LinkButton):
                     obj.set_label("HINT: You can get most of this info at https://ipinfo.io/json")
 
+                elif isinstance(obj, Gtk.ListBox):
+                    obj.set_header_func(display_row_separators)
+
                 #   These DO contain data
-                elif obj_type in ['GtkEntry', 'GtkSpinButton', 'GtkSwitch', 'GtkComboBoxText']:
-                    keys = obj_name.split('.')
+                elif obj_id.startswith('*'):
+                    obj_path, obj_sub = split_id_delimiter(obj_id)
+                    obj_attr = obj.get_name()
+                    keys = obj_path.split('.')
                     val = read_dict(self.us_se, keys)
 
-                    if obj_type == 'GtkEntry':
-                        obj.set_text(try_or_default_type(val, str))
-
-                    elif obj_type == 'GtkSpinButton':
+                    # Has to go before entry because a SpinButton is also an entry...
+                    if isinstance(obj, Gtk.SpinButton):
                         obj.configure(Gtk.Adjustment(value=try_or_default_type(val, int), lower=-999, upper=999,
                                                      step_increment=1, page_increment=5, page_size=0), 1, 0)
-                    elif obj_type == 'GtkSwitch':
-                        if val:
+
+                    elif isinstance(obj, Gtk.Entry):
+                        obj.set_text(try_or_default_type(val, str))
+
+                    elif isinstance(obj, Gtk.Switch):
+                        if try_or_default_type(val, bool):
                             obj.set_active(True)
+                        else:
+                            obj.set_active(False)
+                            if obj_sub:
+                                self.on_container_toggle(obj)
 
-                        if obj_attr and 'frame' in obj_attr:
-                            self.on_frame_toggle(obj)
+                    # Most of this method has been moved to populate_themes_boxes
+                    elif isinstance(obj, Gtk.ComboBoxText):
+                        if obj_attr == 'desk_envs':
+                            # Special try or default
+                            if not try_or_default_type(val, str):
+                                val = 'custom'
+                            obj.set_active_id(try_or_default_type(val, str))
 
-                    elif obj_type == 'GtkComboBoxText':
-                        if 'extras' in obj_attr:
-                            self.set_extra_box(obj)
+    def populate_themes_box(self, box):
+        # If box has an active id it has already been populated
+        if box.get_active_id():
+            return
 
-                        elif 'gtk' in obj_attr:
-                            if val in self.system_themes:
-                                index = self.system_themes.index(val)
-                            else:
-                                index = -1
-                            for i, val in enumerate(self.system_themes):
-                                obj.insert(i, str(i), val)
-                            obj.set_active_id(str(index))
-
-    #   Needs to be separate so it can be called in on_enable_extra_mid_run
-    def set_extra_box(self, box):
         box_id = Gtk.Buildable.get_name(box)
-        box_name = box_id.split('~')[0]
-        box_attr = box_id.split('~')[1]
+        box_path = split_id_delimiter(box_id)[0]
+        box_attr = box.get_name()
 
-        keys = box_name.split('.')
-        val = read_dict(self.us_se, keys)
+        val = read_dict(self.us_se, box_path.split('.'))
+        themes = []
 
-        extra_type = box_attr.split('-')[-1]
-        theme_type = box_attr.split('-')[-2]
+        if box_id.startswith('*themes'):
+            theme_type = box_attr.split('-')[2]
 
-        if val in self.extras[extra_type][theme_type]:
-            index = self.extras[extra_type][theme_type].index(val)
-        else:
-            index = -1
+            if not self.system_themes or not theme_type in self.system_themes:
+                box.set_sensitive(False)
+                return
+            else:
+                themes = self.system_themes[theme_type]
 
-        for i, val in enumerate(self.extras[extra_type][theme_type]):
-            box.insert(i, str(i), val)
-        box.set_active_id(str(index))
+        elif box_id.startswith('*extras'):
+            box_split = box_attr.split('-')
+            theme_type = box_split[1]
+            extra_type = box_split[2]
+
+            if not theme_type in self.extras[extra_type]:
+                box.set_sensitive(False)
+            else:
+                themes = self.extras[extra_type][theme_type]
+
+        for theme in themes:
+            t_name = theme['name']
+            if not 'id' in theme:
+                t_id = theme['name']
+            else:
+                t_id = theme['id']
+            box.append(t_id, t_name)
+        box.set_active_id(try_or_default_type(val, str))
 
     #       HANDLERS
-    def on_frame_toggle(self, switch, *args):
-        switch_id = Gtk.Buildable.get_name(switch).split('~')
-        switch_name = switch_id[0]
-        switch_attr = switch_id[1]
-        frame_name = '{}_toggleframe'.format('_'.join(switch_name.split('.')[:-1]))
-        frame = self.builder.get_object(frame_name)
+    # noinspection PyAttributeOutsideInit
+    def on_update_deskenv(self, box, *args):
+        box_val = box.get_active_id()
 
-        if 'inverse' in switch_attr:
+        self.system_themes = envspecific.get_themes(box_val)
+
+        revealer = self.builder.get_object('deskenvs_revealer')
+        notebooks = self.builder.get_object('deskenvs_box').get_children()
+
+        if box_val == 'custom':
+            revealer.set_reveal_child(False)
+        else:
+            # Populate boxes before displaying
+            env_notebook = self.builder.get_object(box_val)
+            env_boxes = scan_combobox_descendants(env_notebook, box_val)
+
+            for env_box in env_boxes:
+                self.populate_themes_box(env_box)
+
+            revealer.set_reveal_child(True)
+
+            for obj in notebooks:
+                if Gtk.Buildable.get_name(obj) == box_val:
+                    obj.set_visible(True)
+                else:
+                    obj.set_visible(False)
+
+    def on_container_toggle(self, switch, *args):
+        switch_id = Gtk.Buildable.get_name(switch)
+        container = split_id_delimiter(switch_id)[1]
+        switch_attr = switch.get_name()
+
+        container_obj = self.builder.get_object(container)
+
+        if switch_attr == 'inverse':
             disable = True
         else:
             disable = False
 
         if switch.get_active():
-            frame.set_sensitive(not disable)
+            container_obj.set_sensitive(not disable)
         else:
-            frame.set_sensitive(disable)
+            container_obj.set_sensitive(disable)
 
-    def on_enable_extra_mid_run(self, switch, *args):
-        if self.listen_changes and switch.get_active():
+    # To reduce start time (specially because some take a long time to setup, looking at you Atom ლ(ಠ益ಠლ)),
+    # extras' boxes are populated only if they are enabled to begin with or if they are enabled while it is running
+    def on_enable_extra(self, switch, *args):
+        if switch.get_active():
             switch_id = Gtk.Buildable.get_name(switch)
-            switch_name = switch_id.split('~')[0]
-            extra_type = switch_name.split('.')[-2]
+            switch_path, container = split_id_delimiter(switch_id)
+            extra_type = switch_path.split('.')[1]
 
-            empty = False
-            for t, val in self.extras[extra_type].items():
-                if not val:
-                    empty = True
+            # This is the culprit
+            self.extras[extra_type] = extratools.get_extra_themes(extra_type)
 
-            if empty:
-                out, is_error = extratools.get_extra_themes(extra_type)
-                if is_error:
-                    switch.set_active(False)
-                    self.on_frame_toggle(switch)
-                    switch.set_sensitive(False)
-                else:
-                    self.extras[extra_type] = out
+            if self.extras[extra_type]:
+                extras_boxes = scan_combobox_descendants(self.builder.get_object(container), extra_type)
+                for extra_box in extras_boxes:
+                    self.populate_themes_box(extra_box)
+            else:
+                switch.set_active(False)
+                switch.set_sensitive(False)
+                return
 
-                    for obj in self.builder.get_objects():
-                        obj_id = Gtk.Buildable.get_name(obj)
-                        obj_type = obj.get_name()
-                        if obj_id.startswith('extras.{}'.format(extra_type)) and obj_type == 'GtkComboBoxText':
-                            self.set_extra_box(obj)
-
-    #   Multipurpose handle referenced on on_save_settings
-    def on_any_change(self, emitter, *args, output=False):
+    def on_any_change(self, emitter, *args):
         if self.listen_changes:
-            emitter_id = Gtk.Buildable.get_name(emitter)
-            emitter_data = None
-            if not (emitter_id in self.changed):
-                self.changed.append(emitter_id)
-            elif emitter_id in self.changed:
-                emitter_type = emitter.get_name()
-                if emitter_type == 'GtkComboBoxText':
-                    emitter_data = emitter.get_active_text()
-                elif emitter_type == 'GtkSwitch':
-                    emitter_data = emitter.get_active()
-                elif emitter_type == 'GtkSpinButton':
-                    emitter_data = emitter.get_value_as_int()
-                elif emitter_type == 'GtkEntry':
-                    text = emitter.get_text()
-                    if 'float' in emitter_id and isfloat(text):
-                        emitter_data = float(text)
-                    else:
-                        emitter_data = text
-
-                if output:
-                    return emitter_data
-
-                else:
-                    emitter_name = split_name_attr(emitter_id)[0]
-
-                    if emitter_data == read_dict(self.us_se, emitter_name.split('.')):
-                        self.changed.remove(emitter_id)
+            emitter_path = split_id_delimiter(Gtk.Buildable.get_name(emitter))[0]
+            if get_object_data(emitter) != read_dict(self.us_se, emitter_path.split('.')):
+                if not (emitter in self.changed):
+                    self.changed.append(emitter)
+            else:
+                if emitter in self.changed:
+                    self.changed.remove(emitter)
 
     def on_float_entry_change(self, emitter, *args):
         text = emitter.get_text()
-        emitter_id = Gtk.Buildable.get_name(emitter)
         if text.strip() == '' or not isfloat(text):
             emitter.set_icon_from_stock(0, 'gtk-dialog-error')
             emitter.set_icon_tooltip_text(0, 'Input should not be empty and contain only valid decimal (float) numbers')
-            if emitter_id not in self.entries_error:
-                self.entries_error.append(Gtk.Buildable.get_name(emitter))
+            if emitter not in self.entries_error:
+                self.entries_error.append(emitter)
         elif emitter.get_icon_stock(0) == 'gtk-dialog-error':
             emitter.set_icon_from_stock(0, None)
-            self.entries_error.remove(emitter_id)
+            if emitter in self.entries_error:
+                self.entries_error.remove(emitter)
 
     def on_confirm_exit(self, *args):
         if self.changed:
@@ -340,12 +378,14 @@ class App(Gtk.Application):
             #   This should also be destroy()
             self.sub_windows['error_dialog'].hide()
         else:
-            for change in self.changed:
-                change_name = split_name_attr(change)[0]
-                change_obj = self.builder.get_object(change)
-                write_dic(self.us_se, change_name.split('.'), self.on_any_change(change_obj, output=True))
+            for change_obj in self.changed:
+                change_path = split_id_delimiter(Gtk.Buildable.get_name(change_obj))[0]
+                write_dic(self.us_se, change_path.split('.'), get_object_data(change_obj))
             self.saved_settings = True
             self.quit()
+
+    def tmp(self, obj, *args):
+        print(obj.get_active_id())
 
 
 def main(user_settings):
