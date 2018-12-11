@@ -73,19 +73,19 @@ def get_object_data(obj, *args):
             return text
 
 
-def scan_combobox_descendants(obj, match):
+def scan_comboboxtext_descendants(obj, match):
     try:
         children = obj.get_children()
     except AttributeError:
         return
     else:
         if children:
-            comboboxes = []
+            comboboxtexts = []
             for child in children:
-                scan = scan_combobox_descendants(child, match)
+                scan = scan_comboboxtext_descendants(child, match)
                 if scan:
-                    comboboxes.extend(scan)
-            return comboboxes
+                    comboboxtexts.extend(scan)
+            return comboboxtexts
         elif isinstance(obj, Gtk.ComboBoxText) and match in Gtk.Buildable.get_name(obj):
             return [obj]
 
@@ -93,6 +93,17 @@ def scan_combobox_descendants(obj, match):
 def display_row_separators(row, before):
     if before:
         row.set_header(Gtk.Separator())
+
+
+def get_last_visible_row(max_number_of_rows, listbox_id, builder):
+    for i in range(max_number_of_rows, 1, -1):
+        entry = builder.get_object('{}.{}'.format(listbox_id, str(i)))
+        row = entry.get_parent().get_parent()
+
+        if row.get_visible():
+            return i
+
+    return 1
 
 
 ########
@@ -103,11 +114,11 @@ def display_row_separators(row, before):
 #
 # In data containing widgets (ID starts with an *):
 
-# The widget ID is used for widget OUTPUT, i.e. value or PATH it isrelated to in user_settings, if there is a
-# delimiter (~) it will also indicate which part of the GUI it affects (its SUBORDINATE), like in enabler switches
+# The widget ID is used for widget OUTPUT, i.e. value or PATH it is related to in user_settings, if there is a
+# delimiter (~) it will also indicate which part of the GUI it affects (its SUBORDINATE), like in enabler Switches
 #
 # The widget NAME is used for special attributes dependant on the type of
-# widget, such as if it is float only in entries or what it will be populated with in combo boxes
+# widget, such as if it is float only in Entries or what it will be populated with in ComboBoxTexts
 ########
 
 # noinspection PyUnusedLocal
@@ -223,7 +234,7 @@ class App(Gtk.Application):
                             if obj_sub:
                                 self.on_container_toggle(obj)
 
-                    # Most of this method has been moved to populate_themes_boxes
+                    # Most of this method has been moved to populate_themes_cboxts
                     elif isinstance(obj, Gtk.ComboBoxText):
                         if obj_attr == 'desk_envs':
                             # Special try or default
@@ -231,70 +242,88 @@ class App(Gtk.Application):
                                 val = 'custom'
                             obj.set_active_id(try_or_default_type(val, str))
 
-    def populate_themes_box(self, box):
-        # If box has an active id it has already been populated
-        if box.get_active_id():
+        # Hardcoded setup commands listboxes after their entries have already been setup
+        commands_listboxes = ['commands_sunrise_listbox', 'commands_sunset_listbox']
+        for listbox in commands_listboxes:
+            listbox_type = listbox.split('_')[1]
+
+            for i in range(5, 1, -1):
+                entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(i)))
+                entry_text = entry.get_text()
+
+                if entry_text:
+                    break
+                else:
+                    listbox_row = entry.get_parent().get_parent()
+                    listbox_row.set_visible(False)
+
+        # Artificially call function when pages are switched to enable or disable addrow_button according to row limit
+        self.on_change_commands_page()
+
+    def populate_themes_cboxt(self, cboxt):
+        # If ComboBoxText has an active id it has already been populated
+        if cboxt.get_active_id():
             return
 
-        box_id = Gtk.Buildable.get_name(box)
-        box_path = split_id_delimiter(box_id)[0]
-        box_attr = box.get_name()
+        cboxt_id = Gtk.Buildable.get_name(cboxt)
+        cboxt_path = split_id_delimiter(cboxt_id)[0]
+        cboxt_attr = cboxt.get_name()
 
-        val = read_dict(self.us_se, box_path.split('.'))
+        val = read_dict(self.us_se, cboxt_path.split('.'))
         themes = []
 
-        if box_id.startswith('*themes'):
-            theme_type = box_attr.split('-')[2]
+        if cboxt_id.startswith('*themes'):
+            theme_type = cboxt_attr.split('-')[2]
 
-            if not self.system_themes or not theme_type in self.system_themes:
-                box.set_sensitive(False)
+            if not self.system_themes or theme_type not in self.system_themes:
+                cboxt.set_sensitive(False)
                 return
             else:
                 themes = self.system_themes[theme_type]
 
-        elif box_id.startswith('*extras'):
-            box_split = box_attr.split('-')
-            theme_type = box_split[1]
-            extra_type = box_split[2]
+        elif cboxt_id.startswith('*extras'):
+            cboxt_split = cboxt_attr.split('-')
+            theme_type = cboxt_split[1]
+            extra_type = cboxt_split[2]
 
-            if not theme_type in self.extras[extra_type]:
-                box.set_sensitive(False)
+            if theme_type not in self.extras[extra_type]:
+                cboxt.set_sensitive(False)
             else:
                 themes = self.extras[extra_type][theme_type]
 
         for theme in themes:
             t_name = theme['name']
-            if not 'id' in theme:
+            if 'id' not in theme:
                 t_id = theme['name']
             else:
                 t_id = theme['id']
-            box.append(t_id, t_name)
-        box.set_active_id(try_or_default_type(val, str))
+            cboxt.append(t_id, t_name)
+        cboxt.set_active_id(try_or_default_type(val, str))
 
     #       HANDLERS
     # noinspection PyAttributeOutsideInit
-    def on_update_deskenv(self, box, *args):
-        box_val = box.get_active_id()
+    def on_update_deskenv(self, cboxt, *args):
+        cboxt_val = cboxt.get_active_id()
 
-        self.system_themes = envspecific.get_themes(box_val)
+        self.system_themes = envspecific.get_themes(cboxt_val)
 
         revealer = self.builder.get_object('deskenvs_revealer')
         notebooks = self.builder.get_object('deskenvs_box').get_children()
 
-        if box_val == 'custom':
+        if cboxt_val == 'custom':
             revealer.set_reveal_child(False)
         else:
-            # Populate boxes before displaying
-            env_notebook = self.builder.get_object(box_val)
-            env_boxes = scan_combobox_descendants(env_notebook, box_val)
+            # Populate CBoxTs before displaying
+            env_notebook = self.builder.get_object(cboxt_val)
+            env_cboxts = scan_comboboxtext_descendants(env_notebook, cboxt_val)
 
-            for env_box in env_boxes:
-                self.populate_themes_box(env_box)
+            for env_box in env_cboxts:
+                self.populate_themes_cboxt(env_box)
 
             revealer.set_reveal_child(True)
 
             for obj in notebooks:
-                if Gtk.Buildable.get_name(obj) == box_val:
+                if Gtk.Buildable.get_name(obj) == cboxt_val:
                     obj.set_visible(True)
                 else:
                     obj.set_visible(False)
@@ -317,7 +346,7 @@ class App(Gtk.Application):
             container_obj.set_sensitive(disable)
 
     # To reduce start time (specially because some take a long time to setup, looking at you Atom ლ(ಠ益ಠლ)),
-    # extras' boxes are populated only if they are enabled to begin with or if they are enabled while it is running
+    # extras' CBoxTs are populated only if they are enabled to begin with or if they are enabled while it is running
     def on_enable_extra(self, switch, *args):
         if switch.get_active():
             switch_id = Gtk.Buildable.get_name(switch)
@@ -328,13 +357,89 @@ class App(Gtk.Application):
             self.extras[extra_type] = extratools.get_extra_themes(extra_type)
 
             if self.extras[extra_type]:
-                extras_boxes = scan_combobox_descendants(self.builder.get_object(container), extra_type)
-                for extra_box in extras_boxes:
-                    self.populate_themes_box(extra_box)
+                extras_cboxts = scan_comboboxtext_descendants(self.builder.get_object(container), extra_type)
+                for extra_cboxt in extras_cboxts:
+                    self.populate_themes_cboxt(extra_cboxt)
             else:
                 switch.set_active(False)
                 switch.set_sensitive(False)
                 return
+
+    # These three functions related to commands are kinda not great, and will probably change a lot in future revisions
+    # because they were mostly an afterthought
+    def on_remove_command_row(self, button, *args):
+        button_id = Gtk.Buildable.get_name(button)
+        sub_entry = split_id_delimiter(button_id)[1]
+        listbox_type = sub_entry.split('.')[2]
+        row_number = int(sub_entry.split('.')[-1])
+
+        max_number_of_rows = 5
+        last_row = get_last_visible_row(max_number_of_rows, '*extras.commands.{}'.format(listbox_type), self.builder)
+
+        if row_number == last_row:
+            entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(row_number)))
+            entry.set_text('')
+
+            if row_number > 1:
+                row = entry.get_parent().get_parent()
+                row.set_visible(False)
+
+        else:
+            for i in range(row_number, last_row):
+                origin_entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(i + 1)))
+                origin_row = origin_entry.get_parent().get_parent()
+                destination_entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(i)))
+
+                destination_entry.set_text(origin_entry.get_text())
+
+                if i + 1 == last_row:
+                    origin_entry.set_text('')
+                    origin_row.set_visible(False)
+
+        add_button = self.builder.get_object('rowadd_button')
+        add_button.set_sensitive(True)
+
+    def on_add_command_row(self, button, *args):
+        active_listbox_page = self.builder.get_object('commands_notebook').get_current_page()
+
+        if active_listbox_page == 0:
+            listbox_type = 'sunrise'
+        else:
+            listbox_type = 'sunset'
+
+        max_number_of_rows = 5
+        last_row = get_last_visible_row(max_number_of_rows, '*extras.commands.{}'.format(listbox_type), self.builder)
+
+        next_row = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(last_row + 1))) \
+            .get_parent().get_parent()
+
+        next_row.set_visible(True)
+
+        if last_row + 1 == max_number_of_rows:
+            button.set_sensitive(False)
+
+    def on_change_commands_page(self, notebook=None, *args):
+        if notebook:
+            active_listbox_page = notebook.get_current_page()
+
+            # Get the opposite tab, because signal is emitted before switching
+            if active_listbox_page == 0:
+                listbox_type = 'sunset'
+            else:
+                listbox_type = 'sunrise'
+
+        # If called from setup the statement above does not hold
+        else:
+            listbox_type = 'sunrise'
+
+        max_number_of_rows = 5
+        last_row = get_last_visible_row(max_number_of_rows, '*extras.commands.{}'.format(listbox_type), self.builder)
+
+        add_button = self.builder.get_object('rowadd_button')
+        if last_row == max_number_of_rows:
+            add_button.set_sensitive(False)
+        else:
+            add_button.set_sensitive(True)
 
     def on_any_change(self, emitter, *args):
         if self.listen_changes:
@@ -348,7 +453,7 @@ class App(Gtk.Application):
 
     def on_float_entry_change(self, emitter, *args):
         text = emitter.get_text()
-        if text.strip() == '' or not isfloat(text):
+        if not text.strip() or not isfloat(text):
             emitter.set_icon_from_stock(0, 'gtk-dialog-error')
             emitter.set_icon_tooltip_text(0, 'Input should not be empty and contain only valid decimal (float) numbers')
             if emitter not in self.entries_error:
@@ -383,9 +488,6 @@ class App(Gtk.Application):
                 write_dic(self.us_se, change_path.split('.'), get_object_data(change_obj))
             self.saved_settings = True
             self.quit()
-
-    def tmp(self, obj, *args):
-        print(obj.get_active_id())
 
 
 def main(user_settings):

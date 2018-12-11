@@ -2812,10 +2812,11 @@
                                             <property name="can_focus">False</property>
                                             <property name="orientation">vertical</property>
                                             <child>
-                                              <object class="GtkNotebook">
+                                              <object class="GtkNotebook" id="commands_notebook">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="tab_pos">left</property>
+                                                <signal name="switch-page" handler="on_change_commands_page" swapped="no"/>
                                                 <child>
                                                   <object class="GtkListBox" id="commands_sunrise_listbox">
                                                     <property name="visible">True</property>
@@ -2840,7 +2841,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunrise.1">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -2854,6 +2855,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2891,7 +2893,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunrise.2">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -2905,6 +2907,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2942,7 +2945,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunrise.3">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -2956,6 +2959,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2993,7 +2997,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunrise.4">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -3007,6 +3011,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3044,7 +3049,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunrise.5">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -3058,6 +3063,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3112,7 +3118,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunset.1">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -3126,6 +3132,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3163,7 +3170,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunset.2">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -3177,6 +3184,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3214,7 +3222,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunset.3">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -3228,6 +3236,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3265,7 +3274,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunset.4">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -3279,6 +3288,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage" id="ss_rowdelete_button4">
                                                             <property name="visible">True</property>
@@ -3316,7 +3326,7 @@
                                                             <object class="GtkEntry" id="*extras.commands.sunset.5">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
-                                                            <signal name="changed" handler="on_enable_extra" swapped="no"/>
+                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
                                                             </object>
                                                             <packing>
                                                             <property name="expand">True</property>
@@ -3330,6 +3340,7 @@
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
+                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage" id="ss_rowdelete_button5">
                                                             <property name="visible">True</property>
@@ -3385,6 +3396,7 @@
                                                 <property name="halign">center</property>
                                                 <property name="valign">center</property>
                                                 <property name="margin_top">12</property>
+                                                <signal name="clicked" handler="on_add_command_row" swapped="no"/>
                                                 <child>
                                                   <object class="GtkImage">
                                                     <property name="visible">True</property>

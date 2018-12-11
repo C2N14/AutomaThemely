@@ -73,13 +73,8 @@ def main():
         if user_settings['version'] <= 1.2:
             user_settings['themes']['gnome'] = dict()
             user_settings['themes']['gnome']['light'],  user_settings['themes']['gnome']['dark'] = dict(), dict()
-            user_settings['themes']['gnome']['light']['gtk'] = user_settings['themes']['light']
-            user_settings['themes']['gnome']['dark']['gtk'] = user_settings['themes']['dark']
-            try:
-                del user_settings['themes']['light']
-                del user_settings['themes']['dark']
-            except KeyError:
-                pass
+            user_settings['themes']['gnome']['light']['gtk'] = user_settings['themes'].pop('light', '')
+            user_settings['themes']['gnome']['dark']['gtk'] = user_settings['themes'].pop('dark', '')
 
         user_settings = update_dict(default_settings, user_settings)
         user_settings['version'] = version
