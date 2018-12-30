@@ -687,7 +687,7 @@
                                                             <property name="valign">center</property>
                                                             <property name="hexpand">True</property>
                                                             <property name="vexpand">True</property>
-                                                            <property name="label" translatable="yes">Plasma</property>
+                                                            <property name="label" translatable="yes">Look and feel</property>
                                                           </object>
                                                           <packing>
                                                             <property name="left_attach">0</property>
@@ -695,7 +695,7 @@
                                                           </packing>
                                                         </child>
                                                         <child>
-                                                          <object class="GtkComboBoxText" id="*themes.kde.light.plasma">
+                                                          <object class="GtkComboBoxText" id="*themes.kde.light.lookandfeel">
                                                             <property name="name">themes-kde-plasma</property>
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
@@ -758,54 +758,6 @@
                                                     </child>
                                                   </object>
                                                 </child>
-                                                <child>
-                                                  <object class="GtkListBoxRow">
-                                                    <property name="visible">True</property>
-                                                    <property name="can_focus">True</property>
-                                                    <property name="activatable">False</property>
-                                                    <property name="selectable">False</property>
-                                                    <child>
-                                                      <object class="GtkGrid">
-                                                        <property name="visible">True</property>
-                                                        <property name="can_focus">False</property>
-                                                        <property name="margin_left">12</property>
-                                                        <property name="margin_right">12</property>
-                                                        <property name="margin_top">8</property>
-                                                        <property name="margin_bottom">8</property>
-                                                        <property name="hexpand">True</property>
-                                                        <property name="vexpand">True</property>
-                                                        <property name="column_spacing">12</property>
-                                                        <child>
-                                                          <object class="GtkLabel">
-                                                            <property name="visible">True</property>
-                                                            <property name="can_focus">False</property>
-                                                            <property name="halign">start</property>
-                                                            <property name="valign">center</property>
-                                                            <property name="hexpand">True</property>
-                                                            <property name="vexpand">True</property>
-                                                            <property name="label" translatable="yes">Icons</property>
-                                                          </object>
-                                                          <packing>
-                                                            <property name="left_attach">0</property>
-                                                            <property name="top_attach">0</property>
-                                                          </packing>
-                                                        </child>
-                                                        <child>
-                                                          <object class="GtkComboBoxText" id="*themes.kde.light.icons">
-                                                            <property name="name">themes-kde-icons</property>
-                                                            <property name="visible">True</property>
-                                                            <property name="can_focus">False</property>
-                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
-                                                          </object>
-                                                          <packing>
-                                                            <property name="left_attach">1</property>
-                                                            <property name="top_attach">0</property>
-                                                          </packing>
-                                                        </child>
-                                                      </object>
-                                                    </child>
-                                                  </object>
-                                                </child>
                                               </object>
                                             </child>
                                             <child type="tab">
@@ -848,7 +800,7 @@
                                                             <property name="valign">center</property>
                                                             <property name="hexpand">True</property>
                                                             <property name="vexpand">True</property>
-                                                            <property name="label" translatable="yes">Plasma</property>
+                                                            <property name="label" translatable="yes">Look and feel</property>
                                                           </object>
                                                           <packing>
                                                             <property name="left_attach">0</property>
@@ -856,7 +808,7 @@
                                                           </packing>
                                                         </child>
                                                         <child>
-                                                          <object class="GtkComboBoxText" id="*themes.kde.dark.plasma">
+                                                          <object class="GtkComboBoxText" id="*themes.kde.dark.lookandfeel">
                                                             <property name="name">themes-kde-plasma</property>
                                                             <property name="width_request">180</property>
                                                             <property name="visible">True</property>
@@ -908,54 +860,6 @@
                                                           <object class="GtkComboBoxText" id="*themes.kde.dark.gtk">
                                                             <property name="name">themes-kde-gtk</property>
                                                             <property name="width_request">180</property>
-                                                            <property name="visible">True</property>
-                                                            <property name="can_focus">False</property>
-                                                            <signal name="changed" handler="on_any_change" swapped="no"/>
-                                                          </object>
-                                                          <packing>
-                                                            <property name="left_attach">1</property>
-                                                            <property name="top_attach">0</property>
-                                                          </packing>
-                                                        </child>
-                                                      </object>
-                                                    </child>
-                                                  </object>
-                                                </child>
-                                                <child>
-                                                  <object class="GtkListBoxRow">
-                                                    <property name="visible">True</property>
-                                                    <property name="can_focus">True</property>
-                                                    <property name="activatable">False</property>
-                                                    <property name="selectable">False</property>
-                                                    <child>
-                                                      <object class="GtkGrid">
-                                                        <property name="visible">True</property>
-                                                        <property name="can_focus">False</property>
-                                                        <property name="margin_left">12</property>
-                                                        <property name="margin_right">12</property>
-                                                        <property name="margin_top">8</property>
-                                                        <property name="margin_bottom">8</property>
-                                                        <property name="hexpand">True</property>
-                                                        <property name="vexpand">True</property>
-                                                        <property name="column_spacing">12</property>
-                                                        <child>
-                                                          <object class="GtkLabel">
-                                                            <property name="visible">True</property>
-                                                            <property name="can_focus">False</property>
-                                                            <property name="halign">start</property>
-                                                            <property name="valign">center</property>
-                                                            <property name="hexpand">True</property>
-                                                            <property name="vexpand">True</property>
-                                                            <property name="label" translatable="yes">Icons</property>
-                                                          </object>
-                                                          <packing>
-                                                            <property name="left_attach">0</property>
-                                                            <property name="top_attach">0</property>
-                                                          </packing>
-                                                        </child>
-                                                        <child>
-                                                          <object class="GtkComboBoxText" id="*themes.kde.dark.icons">
-                                                            <property name="name">themes-kde-icons</property>
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">False</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -2228,7 +2132,6 @@
                       <object class="GtkExpander">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="expanded">True</property>
                         <property name="label_fill">True</property>
                         <child>
                           <object class="GtkNotebook">
@@ -3600,10 +3503,8 @@
       <widget name="*themes.gnome.dark.shell"/>
       <widget name="*offset.sunrise"/>
       <widget name="*offset.sunset"/>
-      <widget name="*themes.kde.light.plasma"/>
-      <widget name="*themes.kde.light.icons"/>
-      <widget name="*themes.kde.dark.plasma"/>
-      <widget name="*themes.kde.dark.icons"/>
+      <widget name="*themes.kde.light.lookandfeel"/>
+      <widget name="*themes.kde.dark.lookandfeel"/>
       <widget name="*themes.xfce.light.gtk"/>
       <widget name="*themes.xfce.light.icons"/>
       <widget name="*themes.xfce.dark.gtk"/>

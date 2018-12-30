@@ -25,12 +25,12 @@ def scan_vscode_extensions(path):
     list.sort(t_list)
     themes = []
     for name in t_list:
-        themes.append({'name': name})
+        themes.append((name,))
     return themes
 
 
 # Should be delayed and avoided as much as possible...
-def get_extra_themes(extra):
+def get_installed_extra_themes(extra):
     if extra == 'atom':
         try:
             atom_packs = check_output('apm list --themes --bare', shell=True).decode('utf-8')
@@ -46,9 +46,9 @@ def get_extra_themes(extra):
         syntaxes = []
         for v in atom_packs:
             if 'syntax' in v:
-                syntaxes.append({'name': v})
+                syntaxes.append((v,))
             else:
-                themes.append({'name': v})
+                themes.append((v,))
         return {'themes': themes, 'syntaxes': syntaxes}
 
     if extra == 'vscode':

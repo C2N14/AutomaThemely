@@ -45,7 +45,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash ${packdir}/bin/systemd-trigger.sh "${USER_HOME}/.config/AutomaThemely/sun-hours.time" "/usr/bin/env python3 ${packdir}/autoth_tools/updsunhours.py"
+ExecStart=/bin/bash ${packdir}/bin/systemd-trigger.sh "${USER_HOME}/.config/AutomaThemely/sun_times" "/usr/bin/env python3 ${packdir}/autoth_tools/updsuntimes.py"
 EOF
 
 # Export some vars required to make some systemd user commands work

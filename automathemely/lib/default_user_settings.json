@@ -16,14 +16,12 @@
         },
         "kde": {
             "light": {
-                "plasma": "",
-                "gtk": "",
-                "icons": ""
+                "lookandfeel": "",
+                "gtk": ""
             },
             "dark": {
-                "plasma": "",
-                "gtk": "",
-                "icons": ""
+                "lookandfeel": "",
+                "gtk": ""
             }
         },
         "xfce": {

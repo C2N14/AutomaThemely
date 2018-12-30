@@ -1,65 +1,50 @@
-import os
-from pathlib import Path
-
+import os.path
 _ROOT = os.path.abspath(os.path.dirname(__file__))
 __version__ = 1.25
 
+from sys import stdout, stderr
+import logging
 
-def get_resource(path=''):
-    return os.path.join(_ROOT, 'lib', path)
+from automathemely.autoth_tools.utils import get_local, notify
 
-
-def get_bin(path=''):
-    return os.path.join(_ROOT, 'bin', path)
-
-
-def get_local(path=''):
-    return os.path.join(str(Path.home()), '.config/AutomaThemely', path)
+# Create user config dir
+if not os.path.isdir(get_local()):
+    os.makedirs(get_local())
 
 
-def get_root(path=''):
-    return os.path.join(_ROOT, path)
+# Custom Handler to pass logs as notifications
+class NotifyHandler(logging.StreamHandler):
+    def emit(self, record):
+        message = self.format(record)
+        notify(message)
 
 
-def notify(message):
-    import gi
-    gi.require_version('Notify', '0.7')
-    from gi.repository import Notify, GLib
+default_simple_format = '%(levelname)s: %(message)s'
+timed_simple_format = '(%(asctime)s) %(levelname)s: %(message)s'
 
-    if not Notify.is_initted():
-        Notify.init('AutomaThemely')
+# Setup logging levels/handlers
+main_file_handler = logging.FileHandler(get_local('automathemely.log'), mode='w')
+updsun_file_handler = logging.FileHandler(get_local('.updsuntimes.log'), mode='w')
+scheduler_file_handler = logging.FileHandler(get_local('.autothscheduler.log'), mode='w')
+info_or_lower_handler = logging.StreamHandler(stdout)
+info_or_lower_handler.setLevel(logging.DEBUG)
+info_or_lower_handler.addFilter(lambda log: log.levelno <= logging.INFO)
+warning_or_higher_handler = logging.StreamHandler(stderr)
+warning_or_higher_handler.setLevel(logging.WARNING)
+# This will be added in run.py if notifications are enabled
+notifier_handler = NotifyHandler()
+notifier_handler.setLevel(logging.INFO)
 
-    n = Notify.Notification.new('AutomaThemely', message, get_resource('automathemely.svg'))
-    try:  # I don't even know... https://bugzilla.redhat.com/show_bug.cgi?id=1582833
-        n.show()
-    except GLib.GError as e:
-        if str(e) != 'g-dbus-error-quark: Unexpected reply type (16)' \
-                and str(e) != 'g-dbus-error-quark: GDBus.Error:org.freedesktop.DBus.Error.NoReply: Message recipient ' \
-                              'disconnected from message bus without replying (4)':
-            raise e
-
-
-def pgrep(process_name, use_full=False):
-    import subprocess
-    command = ['pgrep']
-    if use_full:
-        command.append('-f')
-    command.append(process_name)
-    p = subprocess.Popen(command, stdout=subprocess.PIPE)
-    if p.wait() == 0:  # I. e. if return code == 0
-        return True
-    else:
-        return False
-
-
-def verify_gnome_session(wait=False):
-    import time
-    while True:
-        if pgrep('gnome-session'):
-            if not wait:
-                return True
-            break
-        else:
-            if not wait:
-                return False
-            time.sleep(1)
+# Setup root logger
+logging.basicConfig(
+    # filename=get_local('automathemely.log'),
+    # filemode='w',
+    level=logging.DEBUG,
+    handlers=(main_file_handler,
+              info_or_lower_handler,
+              warning_or_higher_handler,
+              # notifier_handler
+              ),
+    # format='%(levelname)s (%(name)s - %(funcname)s): %(message)s'
+    format=default_simple_format
+)

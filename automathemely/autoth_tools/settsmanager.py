@@ -5,11 +5,14 @@ gi.require_version('Gtk', '3.0')
 # noinspection PyPep8
 from gi.repository import Gtk, Gio
 # noinspection PyPep8
-from automathemely import get_resource, get_local, notify
+from automathemely.autoth_tools.utils import get_resource, get_local, notify
 # noinspection PyPep8
 from automathemely.autoth_tools import extratools, envspecific
 # noinspection PyPep8
 import json
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def read_dict(dic, keys):
@@ -60,7 +63,7 @@ def isfloat(value):
 # noinspection PyUnusedLocal
 def get_object_data(obj, *args):
     if isinstance(obj, Gtk.ComboBoxText):
-        return obj.get_active_id()
+        return obj.get_active_id() if obj.get_active_id() != 'none' else ''
     elif isinstance(obj, Gtk.Switch):
         return obj.get_active()
     elif isinstance(obj, Gtk.SpinButton):
@@ -143,7 +146,7 @@ class App(Gtk.Application):
         # This does not get initialized until needed
         self.extras = dict()
 
-        self.system_themes = envspecific.get_themes(self.us_se['desktop_environment'])
+        self.system_themes = envspecific.get_installed_themes(self.us_se['desktop_environment'])
 
         self.listen_changes = False
         self.saved_settings = False
@@ -187,10 +190,7 @@ class App(Gtk.Application):
         else:
             exit_message = 'No changes were made'
 
-        #   As it skips over argmanager, it needs to handle exit notifications by itself
-        if self.us_se['misc']['notifications']:
-            notify(exit_message)
-        print(exit_message)
+        logger.info(exit_message)
 
     #      MISC
     # Called on primary activation
@@ -276,6 +276,7 @@ class App(Gtk.Application):
             theme_type = cboxt_attr.split('-')[2]
 
             if not self.system_themes or theme_type not in self.system_themes:
+                tmp = cboxt.get_children()
                 cboxt.set_sensitive(False)
                 return
             else:
@@ -292,20 +293,26 @@ class App(Gtk.Application):
                 themes = self.extras[extra_type][theme_type]
 
         for theme in themes:
-            t_name = theme['name']
-            if 'id' not in theme:
-                t_id = theme['name']
+            t_id = theme[0]
+            if len(theme) > 1:
+                t_name = theme[1]
             else:
-                t_id = theme['id']
+                t_name = t_id[0].upper() + t_id[1:]
             cboxt.append(t_id, t_name)
-        cboxt.set_active_id(try_or_default_type(val, str))
+
+        active_id = try_or_default_type(val, str)
+        if active_id:
+            cboxt.set_active_id(active_id)
+        else:
+            # So it doesn't continue populating repeated options on non-set CBoxTs
+            cboxt.set_active_id('none')
 
     #       HANDLERS
     # noinspection PyAttributeOutsideInit
     def on_update_deskenv(self, cboxt, *args):
         cboxt_val = cboxt.get_active_id()
 
-        self.system_themes = envspecific.get_themes(cboxt_val)
+        self.system_themes = envspecific.get_installed_themes(cboxt_val)
 
         revealer = self.builder.get_object('deskenvs_revealer')
         notebooks = self.builder.get_object('deskenvs_box').get_children()
@@ -354,7 +361,7 @@ class App(Gtk.Application):
             extra_type = switch_path.split('.')[1]
 
             # This is the culprit
-            self.extras[extra_type] = extratools.get_extra_themes(extra_type)
+            self.extras[extra_type] = extratools.get_installed_extra_themes(extra_type)
 
             if self.extras[extra_type]:
                 extras_cboxts = scan_comboboxtext_descendants(self.builder.get_object(container), extra_type)

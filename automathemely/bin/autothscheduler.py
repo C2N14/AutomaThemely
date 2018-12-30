@@ -5,17 +5,19 @@ from datetime import datetime
 
 from schedule import Scheduler, CancelJob
 
-from automathemely import get_local
+from automathemely.autoth_tools.utils import get_local
+from automathemely import info_or_lower_handler, warning_or_higher_handler, scheduler_file_handler, timed_simple_format
 
-logger = logging.getLogger('scheduler')
-logger.setLevel(logging.INFO)
-try:
-    fh = logging.FileHandler(get_local('automathemely.log'), mode='w')
-except FileNotFoundError as e:
-    logger.exception(e)
-else:
-    fh.setLevel(logging.INFO)
-    logger.addHandler(fh)
+
+logger = logging.getLogger('autothscheduler.py')
+logger.propagate = False
+
+logger.addHandler(scheduler_file_handler)
+logger.addHandler(info_or_lower_handler)
+logger.addHandler(warning_or_higher_handler)
+
+for handler in logger.handlers[:]:
+    handler.setFormatter(logging.Formatter(timed_simple_format))
 
 
 def get_next_run():
@@ -41,14 +43,17 @@ def get_next_run():
 
 
 def run_automathemely():
-    from automathemely import verify_gnome_session
+    from automathemely.autoth_tools.utils import verify_gnome_session
     # You can't change the theme if the gnome session is not active (E. g. when you close a laptop's lid)
     verify_gnome_session(True)
-    from subprocess import run
+
+    from subprocess import check_output, PIPE, CalledProcessError
     try:
-        run('automathemely')
-    except Exception as error:
-        logger.exception(error)
+        check_output('automathemely', stderr=PIPE)
+    except CalledProcessError as e:
+        logger.error('Exception while running AutomaThemely')
+        logger.error(str(e.stderr, 'utf-8'))
+
     return CancelJob
 
 
@@ -61,8 +66,9 @@ class SafeScheduler(Scheduler):
         # noinspection PyBroadException
         try:
             super()._run_job(job)
-        except Exception:
-            logger.exception('AutomaThemely ({}):'.format(datetime.now()))
+        except Exception as e:
+            logger.error('Exception while running AutomaThemely')
+            logger.exception(e)
             job.last_run = datetime.now()
             # job._schedule_next_run()
 
@@ -74,7 +80,7 @@ while True:
 
     while True:
         if not scheduler.jobs:
-            logger.info('{} - Running...'.format(str(datetime.now())))
+            logger.info('Running...')
             break
         scheduler.run_pending()
         time.sleep(1)

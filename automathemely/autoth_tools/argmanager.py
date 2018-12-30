@@ -2,9 +2,11 @@
 import argparse
 import json
 import pickle as pkl
-from sys import exit
 
-from automathemely import get_local, get_bin
+from automathemely.autoth_tools.utils import get_local
+
+import logging
+logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 options = parser.add_mutually_exclusive_group()
@@ -54,25 +56,27 @@ def main(us_se):
 
     #   LIST
     if args.list:
-        print('Current settings:')
+        logger.info('Printing current settings...')
+        print('')
         print_list(us_se)
-        exit()
+        return
 
     #   SET
     elif args.setting:
         if not args.setting.count('=') == 1:
-            exit('\nERROR: Invalid string (None or more than one "=" signs)')
+            logger.error('Invalid string (None or more than one "=" signs)')
+            return
 
         setts = args.setting.split('=')
         to_set_key = setts[0].strip()
         to_set_val = setts[1].strip()
 
         if to_set_key == '':
-            exit('\nERROR: Invalid string (Empty key)')
+            logger.error('Invalid string (Empty key)')
         elif to_set_key[-1] == '.':
-            exit('\nERROR: Invalid string (Key ends in dot)')
+            logger.error('Invalid string (Key ends in dot)')
         if not to_set_val:
-            exit('\nERROR: Invalid string (Empty value)')
+            logger.error('Invalid string (Empty value)')
         elif to_set_val.lower() in ['t', 'true']:
             to_set_val = True
         elif to_set_val.lower() in ['f', 'false']:
@@ -87,7 +91,7 @@ def main(us_se):
                     pass
 
         if to_set_key.count('.') > 0:
-            key_list = [x.strip() for x in to_set_key.split('.')]
+            key_list = [s.strip() for s in to_set_key.split('.')]
         else:
             key_list = [to_set_key]
 
@@ -99,45 +103,47 @@ def main(us_se):
 
             # Warning if user disables auto by --setting
             if 'enabled' in to_set_key and not to_set_val:
-                print('\nWARNING: Remember to set all the necessary values with either --settings or --manage')
-            print('Successfully set key "{}" as "{}"'.format(to_set_key, to_set_val))
+                logger.warning('Remember to set all the necessary values with either --settings or --manage')
+            logger.info('Successfully set key "{}" as "{}"'.format(to_set_key, to_set_val))
             exit()
 
         else:
-            exit('\nERROR: Key "{}" not found'.format(to_set_key))
+            logger.error('Key "{}" not found'.format(to_set_key))
+
+        return
 
     #   MANAGE
     elif args.manage:
         from . import settsmanager
         #   From here on the manager takes over 'til exit
         settsmanager.main(us_se)
-        return None, None
+        return
 
     #   UPDATE
     elif args.update:
-        from . import updsunhours
-        output, is_error = updsunhours.main(us_se)
-        if not is_error:
+        from . import updsuntimes
+        output = updsuntimes.main(us_se)
+        if output:
             with open(get_local('sun_hours.time'), 'wb') as file:
                 pkl.dump(output, file, protocol=pkl.HIGHEST_PROTOCOL)
-            return 'Sun hours successfully updated', False
-        else:
-            # Pass the error message for a notification popup
-            return output, True
+            logger.info('Sun hours successfully updated')
+        return
 
     #   RESTART
     elif args.restart:
-        from automathemely import pgrep
-        import subprocess
-        import os
-        if pgrep('autothscheduler.py', True):
-            subprocess.Popen(['pkill', '-f', 'autothscheduler.py']).wait()
-        try:
-            err_out = open(get_local('automathemely.log'), 'w')
-        except (FileNotFoundError, PermissionError):
-            err_out = subprocess.DEVNULL
-        subprocess.Popen(['/usr/bin/env', 'python3', get_bin('autothscheduler.py')],
-                         stdout=subprocess.DEVNULL,
-                         stderr=err_out,
-                         preexec_fn=os.setpgrp)
-        return 'Restarted the scheduler', False
+        logger.debug('Not implemented yet!')
+        return
+        # from automathemely.autoth_tools.utils import pgrep
+        # import subprocess
+        # import os
+        # if pgrep('autothscheduler.py', True):
+        #     subprocess.Popen(['pkill', '-f', 'autothscheduler.py']).wait()
+        # try:
+        #     err_out = open(get_local('automathemely.log'), 'w')
+        # except (FileNotFoundError, PermissionError):
+        #     err_out = subprocess.DEVNULL
+        # subprocess.Popen(['/usr/bin/env', 'python3', get_bin('autothscheduler.py')],
+        #                  stdout=subprocess.DEVNULL,
+        #                  stderr=err_out,
+        #                  preexec_fn=os.setpgrp)
+        # return 'Restarted the scheduler', False
