@@ -6,7 +6,7 @@ import pytz
 import tzlocal
 from astral import Location
 
-from automathemely.autoth_tools.utils import get_local, verify_gnome_session
+from automathemely.autoth_tools.utils import get_local, verify_desktop_session
 
 import logging
 
@@ -36,7 +36,6 @@ def get_loc_from_ip():
 
 
 def main(us_se):
-
     if 'location' not in us_se:
         logger.error('Invalid config file')
         return
@@ -90,7 +89,7 @@ if __name__ == '__main__':
 
     # When importing automathemely we inherit the root logger, so we need to configure it for our purposes
     from automathemely import main_file_handler, notifier_handler, updsun_file_handler, \
-        default_simple_format, timed_simple_format
+        default_simple_format, timed_details_format
 
     # I know there also is logging.root, but I found it has some weird behaviours
     root_logger = logging.getLogger()
@@ -103,7 +102,7 @@ if __name__ == '__main__':
 
     # Format the remaining handlers to display time
     for handler in root_logger.handlers[:]:
-        handler.setFormatter(logging.Formatter(timed_simple_format))
+        handler.setFormatter(logging.Formatter(timed_details_format))
 
     # This logger is specifically for displaying a notification if something went wrong
     run_as_main_logger = logging.getLogger('updsuntimes.py')
@@ -115,12 +114,11 @@ if __name__ == '__main__':
     with open(get_local('user_settings.json'), 'r') as f:
         user_settings = json.load(f)
 
-    # output = main(user_settings)
-    output = main(dict())
+    output = main(user_settings)
     if output:
         with open(get_local('sun_times'), 'wb') as file:
             pkl.dump(output, file, protocol=pkl.HIGHEST_PROTOCOL)
     else:
-        # if verify_gnome_session():
-        run_as_main_logger.warning('There were some errors while updating the sunrise and sunset times, check {} for '
-                                   'more details'.format(get_local('.updsuntimes.log')))
+        if verify_desktop_session():
+            run_as_main_logger.warning('There were some errors while updating the sunrise and sunset times, check {} '
+                                       'for more details'.format(get_local('.updsuntimes.log')))

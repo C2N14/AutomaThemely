@@ -85,7 +85,7 @@
                 "dark": ""
             }
         },
-        "commands": {
+        "scripts": {
             "sunrise": {
                 "1": "",
                 "2": "",

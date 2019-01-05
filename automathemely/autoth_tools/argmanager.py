@@ -3,7 +3,7 @@ import argparse
 import json
 import pickle as pkl
 
-from automathemely.autoth_tools.utils import get_local
+from automathemely.autoth_tools.utils import get_local, read_dict, write_dic
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,24 +19,6 @@ options.add_argument('-u', '--update', help='update the sunrise and sunset\'s ti
 options.add_argument('-r', '--restart',
                      help='(re)start the scheduler script if it were to not start or stop unexpectedly',
                      action='store_true', default=False)
-
-
-#   For --setting arg
-def lookup_dic(d, k):
-    val = d
-    for key in k:
-        try:
-            val = val[key]
-        except KeyError:
-            return False
-    return True
-
-
-#   For --setting arg
-def write_dic(dic, keys, value):
-    for key in keys[:-1]:
-        dic = dic.setdefault(key, {})
-    dic[keys[-1]] = value
 
 
 #   For --list arg
@@ -95,7 +77,7 @@ def main(us_se):
         else:
             key_list = [to_set_key]
 
-        if lookup_dic(us_se, key_list):
+        if read_dict(us_se, key_list):
             write_dic(us_se, key_list, to_set_val)
 
             with open(get_local('user_settings.json'), 'w') as file:
@@ -131,19 +113,9 @@ def main(us_se):
 
     #   RESTART
     elif args.restart:
-        logger.debug('Not implemented yet!')
-        return
-        # from automathemely.autoth_tools.utils import pgrep
-        # import subprocess
-        # import os
-        # if pgrep('autothscheduler.py', True):
-        #     subprocess.Popen(['pkill', '-f', 'autothscheduler.py']).wait()
-        # try:
-        #     err_out = open(get_local('automathemely.log'), 'w')
-        # except (FileNotFoundError, PermissionError):
-        #     err_out = subprocess.DEVNULL
-        # subprocess.Popen(['/usr/bin/env', 'python3', get_bin('autothscheduler.py')],
-        #                  stdout=subprocess.DEVNULL,
-        #                  stderr=err_out,
-        #                  preexec_fn=os.setpgrp)
-        # return 'Restarted the scheduler', False
+        from automathemely.autoth_tools.utils import pgrep, get_bin
+        from subprocess import Popen, DEVNULL
+        if pgrep(['autothscheduler.py'], use_full=True):
+            Popen(['pkill', '-f', 'autothscheduler.py']).wait()
+        Popen(['python3', get_bin('autothscheduler.py')], start_new_session=True, stdout=DEVNULL, stderr=DEVNULL)
+        logger.info('Restarted the scheduler')

@@ -30,7 +30,9 @@ setup(
     python_requires='>=3.5',
     install_requires=['requests', 'astral', 'pytz', 'tzlocal', 'schedule'],
     include_package_data=True,
-    package_data={'automathemely': get_package_files('automathemely/lib')+['../automathemely/bin/systemd-trigger.sh']},
+    package_data={
+        'automathemely': get_package_files('automathemely/lib') + ['../automathemely/bin/systemd-trigger.sh']
+                         + ['../automathemely/bin/kde-refresh-gtk2']},
     data_files=[
         ('share/icons/hicolor/scalable/apps', ['automathemely/lib/automathemely.svg']),
         ('share/applications', ['automathemely/lib/automathemely.desktop'])

@@ -2,6 +2,10 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.14"/>
+  <object class="GtkMenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+  </object>
   <object class="GtkMessageDialog" id="confirm_dialog">
     <property name="can_focus">False</property>
     <property name="window_position">center-on-parent</property>
@@ -687,7 +691,7 @@
                                                             <property name="valign">center</property>
                                                             <property name="hexpand">True</property>
                                                             <property name="vexpand">True</property>
-                                                            <property name="label" translatable="yes">Look and feel</property>
+                                                            <property name="label" translatable="yes">Look and Feel</property>
                                                           </object>
                                                           <packing>
                                                             <property name="left_attach">0</property>
@@ -800,7 +804,7 @@
                                                             <property name="valign">center</property>
                                                             <property name="hexpand">True</property>
                                                             <property name="vexpand">True</property>
-                                                            <property name="label" translatable="yes">Look and feel</property>
+                                                            <property name="label" translatable="yes">Look and Feel</property>
                                                           </object>
                                                           <packing>
                                                             <property name="left_attach">0</property>
@@ -2715,13 +2719,13 @@
                                             <property name="can_focus">False</property>
                                             <property name="orientation">vertical</property>
                                             <child>
-                                              <object class="GtkNotebook" id="commands_notebook">
+                                              <object class="GtkNotebook" id="scripts_notebook">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="tab_pos">left</property>
-                                                <signal name="switch-page" handler="on_change_commands_page" swapped="no"/>
+                                                <signal name="switch-page" handler="on_change_scripts_page" swapped="no"/>
                                                 <child>
-                                                  <object class="GtkListBox" id="commands_sunrise_listbox">
+                                                  <object class="GtkListBox" id="scripts_sunrise_listbox">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">False</property>
                                                     <property name="selection_mode">none</property>
@@ -2741,7 +2745,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunrise.1">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunrise.1">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -2753,12 +2757,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunrise.1">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunrise.1">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2793,7 +2797,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunrise.2">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunrise.2">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -2805,12 +2809,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunrise.2">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunrise.2">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2845,7 +2849,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunrise.3">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunrise.3">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -2857,12 +2861,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunrise.3">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunrise.3">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2897,7 +2901,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunrise.4">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunrise.4">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -2909,12 +2913,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunrise.4">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunrise.4">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2949,7 +2953,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunrise.5">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunrise.5">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -2961,12 +2965,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunrise.5">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunrise.5">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -2998,7 +3002,7 @@
                                                   </packing>
                                                 </child>
                                                 <child>
-                                                  <object class="GtkListBox" id="commands_sunset_listbox">
+                                                  <object class="GtkListBox" id="scripts_sunset_listbox">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">False</property>
                                                     <property name="selection_mode">none</property>
@@ -3018,7 +3022,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunset.1">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunset.1">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -3030,12 +3034,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunset.1">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunset.1">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3070,7 +3074,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunset.2">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunset.2">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -3082,12 +3086,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunset.2">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunset.2">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3122,7 +3126,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunset.3">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunset.3">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -3134,12 +3138,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunset.3">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunset.3">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage">
                                                             <property name="visible">True</property>
@@ -3174,7 +3178,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunset.4">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunset.4">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -3186,12 +3190,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunset.4">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunset.4">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage" id="ss_rowdelete_button4">
                                                             <property name="visible">True</property>
@@ -3226,7 +3230,7 @@
                                                             <property name="margin_bottom">8</property>
                                                             <property name="spacing">12</property>
                                                             <child>
-                                                            <object class="GtkEntry" id="*extras.commands.sunset.5">
+                                                            <object class="GtkEntry" id="*extras.scripts.sunset.5">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <signal name="changed" handler="on_any_change" swapped="no"/>
@@ -3238,12 +3242,12 @@
                                                             </packing>
                                                             </child>
                                                             <child>
-                                                            <object class="GtkButton" id="rowdelete_button~*extras.commands.sunset.5">
+                                                            <object class="GtkButton" id="rowdelete_button~*extras.scripts.sunset.5">
                                                             <property name="visible">True</property>
                                                             <property name="can_focus">True</property>
                                                             <property name="receives_default">True</property>
                                                             <property name="halign">end</property>
-                                                            <signal name="clicked" handler="on_remove_command_row" swapped="no"/>
+                                                            <signal name="clicked" handler="on_remove_scripts_row" swapped="no"/>
                                                             <child>
                                                             <object class="GtkImage" id="ss_rowdelete_button5">
                                                             <property name="visible">True</property>
@@ -3299,7 +3303,7 @@
                                                 <property name="halign">center</property>
                                                 <property name="valign">center</property>
                                                 <property name="margin_top">12</property>
-                                                <signal name="clicked" handler="on_add_command_row" swapped="no"/>
+                                                <signal name="clicked" handler="on_add_scripts_row" swapped="no"/>
                                                 <child>
                                                   <object class="GtkImage">
                                                     <property name="visible">True</property>
@@ -3329,7 +3333,7 @@
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Commands</property>
+                                <property name="label" translatable="yes">Scripts</property>
                               </object>
                               <packing>
                                 <property name="position">2</property>

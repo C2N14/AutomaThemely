@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-rm -rf "$USER_HOME/.config/AutomaThemely"
+rm -rf "$USER_HOME/.config/automathemely"
 rm -rf "/etc/xdg/autostart/automathemely.desktop"
 
 pkill -f "autothscheduler.py"

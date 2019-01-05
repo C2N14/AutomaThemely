@@ -2,29 +2,19 @@
 import gi
 
 gi.require_version('Gtk', '3.0')
+
 # noinspection PyPep8
 from gi.repository import Gtk, Gio
 # noinspection PyPep8
-from automathemely.autoth_tools.utils import get_resource, get_local, notify
+from automathemely.autoth_tools.utils import get_resource, get_local, read_dict, write_dic
 # noinspection PyPep8
 from automathemely.autoth_tools import extratools, envspecific
 # noinspection PyPep8
 import json
 
+# noinspection PyPep8
 import logging
 logger = logging.getLogger(__name__)
-
-
-def read_dict(dic, keys):
-    for k in keys:
-        dic = dic[k]
-    return dic
-
-
-def write_dic(dic, keys, value):
-    for key in keys[:-1]:
-        dic = dic.setdefault(key, {})
-    dic[keys[-1]] = value
 
 
 def split_id_delimiter(obj_id):
@@ -242,13 +232,13 @@ class App(Gtk.Application):
                                 val = 'custom'
                             obj.set_active_id(try_or_default_type(val, str))
 
-        # Hardcoded setup commands listboxes after their entries have already been setup
-        commands_listboxes = ['commands_sunrise_listbox', 'commands_sunset_listbox']
-        for listbox in commands_listboxes:
+        # Hardcoded setup scripts listboxes after their entries have already been setup
+        scripts_listboxes = ['scripts_sunrise_listbox', 'scripts_sunset_listbox']
+        for listbox in scripts_listboxes:
             listbox_type = listbox.split('_')[1]
 
             for i in range(5, 1, -1):
-                entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(i)))
+                entry = self.builder.get_object('*extras.scripts.{}.{}'.format(listbox_type, str(i)))
                 entry_text = entry.get_text()
 
                 if entry_text:
@@ -258,7 +248,7 @@ class App(Gtk.Application):
                     listbox_row.set_visible(False)
 
         # Artificially call function when pages are switched to enable or disable addrow_button according to row limit
-        self.on_change_commands_page()
+        self.on_change_scripts_page()
 
     def populate_themes_cboxt(self, cboxt):
         # If ComboBoxText has an active id it has already been populated
@@ -372,19 +362,19 @@ class App(Gtk.Application):
                 switch.set_sensitive(False)
                 return
 
-    # These three functions related to commands are kinda not great, and will probably change a lot in future revisions
+    # These three functions related to scripts are kinda not great, and will probably change a lot in future revisions
     # because they were mostly an afterthought
-    def on_remove_command_row(self, button, *args):
+    def on_remove_scripts_row(self, button, *args):
         button_id = Gtk.Buildable.get_name(button)
         sub_entry = split_id_delimiter(button_id)[1]
         listbox_type = sub_entry.split('.')[2]
         row_number = int(sub_entry.split('.')[-1])
 
         max_number_of_rows = 5
-        last_row = get_last_visible_row(max_number_of_rows, '*extras.commands.{}'.format(listbox_type), self.builder)
+        last_row = get_last_visible_row(max_number_of_rows, '*extras.scripts.{}'.format(listbox_type), self.builder)
 
         if row_number == last_row:
-            entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(row_number)))
+            entry = self.builder.get_object('*extras.scripts.{}.{}'.format(listbox_type, str(row_number)))
             entry.set_text('')
 
             if row_number > 1:
@@ -393,9 +383,9 @@ class App(Gtk.Application):
 
         else:
             for i in range(row_number, last_row):
-                origin_entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(i + 1)))
+                origin_entry = self.builder.get_object('*extras.scripts.{}.{}'.format(listbox_type, str(i + 1)))
                 origin_row = origin_entry.get_parent().get_parent()
-                destination_entry = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(i)))
+                destination_entry = self.builder.get_object('*extras.scripts.{}.{}'.format(listbox_type, str(i)))
 
                 destination_entry.set_text(origin_entry.get_text())
 
@@ -406,8 +396,8 @@ class App(Gtk.Application):
         add_button = self.builder.get_object('rowadd_button')
         add_button.set_sensitive(True)
 
-    def on_add_command_row(self, button, *args):
-        active_listbox_page = self.builder.get_object('commands_notebook').get_current_page()
+    def on_add_scripts_row(self, button, *args):
+        active_listbox_page = self.builder.get_object('scripts_notebook').get_current_page()
 
         if active_listbox_page == 0:
             listbox_type = 'sunrise'
@@ -415,9 +405,9 @@ class App(Gtk.Application):
             listbox_type = 'sunset'
 
         max_number_of_rows = 5
-        last_row = get_last_visible_row(max_number_of_rows, '*extras.commands.{}'.format(listbox_type), self.builder)
+        last_row = get_last_visible_row(max_number_of_rows, '*extras.scripts.{}'.format(listbox_type), self.builder)
 
-        next_row = self.builder.get_object('*extras.commands.{}.{}'.format(listbox_type, str(last_row + 1))) \
+        next_row = self.builder.get_object('*extras.scripts.{}.{}'.format(listbox_type, str(last_row + 1))) \
             .get_parent().get_parent()
 
         next_row.set_visible(True)
@@ -425,7 +415,7 @@ class App(Gtk.Application):
         if last_row + 1 == max_number_of_rows:
             button.set_sensitive(False)
 
-    def on_change_commands_page(self, notebook=None, *args):
+    def on_change_scripts_page(self, notebook=None, *args):
         if notebook:
             active_listbox_page = notebook.get_current_page()
 
@@ -440,7 +430,7 @@ class App(Gtk.Application):
             listbox_type = 'sunrise'
 
         max_number_of_rows = 5
-        last_row = get_last_visible_row(max_number_of_rows, '*extras.commands.{}'.format(listbox_type), self.builder)
+        last_row = get_last_visible_row(max_number_of_rows, '*extras.scripts.{}'.format(listbox_type), self.builder)
 
         add_button = self.builder.get_object('rowadd_button')
         if last_row == max_number_of_rows:

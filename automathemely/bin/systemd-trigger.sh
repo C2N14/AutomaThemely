@@ -4,6 +4,6 @@
 # days have passed since the last boot.
 #
 # First tried adding it as a one liner to ExecStart but it failed to run stat, cut and date even with /bin/bash -c
-if [ "$(stat -c %y $1 | cut -f 1 -d " ")" != "$(date +%F)" ]; then
+if [ "$(stat -c %y "$(echo ~)$1" | cut -f 1 -d " ")" != "$(date +%F)" ]; then
     eval $2
 fi

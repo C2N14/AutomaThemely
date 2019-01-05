@@ -45,7 +45,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash ${packdir}/bin/systemd-trigger.sh "${USER_HOME}/.config/AutomaThemely/sun_times" "/usr/bin/env python3 ${packdir}/autoth_tools/updsuntimes.py"
+ExecStart=/bin/bash ${packdir}/bin/systemd-trigger.sh "/.config/automathemely/sun_times" "/usr/bin/env python3 ${packdir}/autoth_tools/updsuntimes.py"
 EOF
 
 # Export some vars required to make some systemd user commands work
@@ -60,3 +60,4 @@ sudo -E -u $SUDO_USER systemctl --user --global start automathemely.timer
 # Crontab removal
 # If crontabs are not installed carries on
 (crontab -u $SUDO_USER -l | awk ' !/sunrise_change_theme/ && !/sunset_change_theme/ && !/update_sunhours_daily/ && !/update_sunhours_reboot/ { print }' | crontab -u $SUDO_USER -) || true
+

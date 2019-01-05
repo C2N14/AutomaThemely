@@ -6,7 +6,7 @@ from datetime import datetime
 from schedule import Scheduler, CancelJob
 
 from automathemely.autoth_tools.utils import get_local
-from automathemely import info_or_lower_handler, warning_or_higher_handler, scheduler_file_handler, timed_simple_format
+from automathemely import info_or_lower_handler, warning_or_higher_handler, scheduler_file_handler, timed_details_format
 
 
 logger = logging.getLogger('autothscheduler.py')
@@ -17,7 +17,7 @@ logger.addHandler(info_or_lower_handler)
 logger.addHandler(warning_or_higher_handler)
 
 for handler in logger.handlers[:]:
-    handler.setFormatter(logging.Formatter(timed_simple_format))
+    handler.setFormatter(logging.Formatter(timed_details_format))
 
 
 def get_next_run():
@@ -25,7 +25,7 @@ def get_next_run():
     import tzlocal
     import pytz
     try:
-        with open(get_local('sun_hours.time'), 'rb') as file:
+        with open(get_local('sun_times'), 'rb') as file:
             sunrise, sunset = pickle.load(file)
     except FileNotFoundError:
         import sys
@@ -43,16 +43,15 @@ def get_next_run():
 
 
 def run_automathemely():
-    from automathemely.autoth_tools.utils import verify_gnome_session
-    # You can't change the theme if the gnome session is not active (E. g. when you close a laptop's lid)
-    verify_gnome_session(True)
+    from automathemely.autoth_tools.utils import verify_desktop_session
+    # You can't change the theme if the desktop session is not active (E. g. when you close a laptop's lid)
+    verify_desktop_session(True)
 
-    from subprocess import check_output, PIPE, CalledProcessError
+    from subprocess import check_output, PIPE
     try:
         check_output('automathemely', stderr=PIPE)
-    except CalledProcessError as e:
-        logger.error('Exception while running AutomaThemely')
-        logger.error(str(e.stderr, 'utf-8'))
+    except Exception as e:
+        logger.exception('Exception while running AutomaThemely', exc_info=e)
 
     return CancelJob
 
@@ -67,8 +66,7 @@ class SafeScheduler(Scheduler):
         try:
             super()._run_job(job)
         except Exception as e:
-            logger.error('Exception while running AutomaThemely')
-            logger.exception(e)
+            logger.exception('Exception while running AutomaThemely', exc_info=e)
             job.last_run = datetime.now()
             # job._schedule_next_run()
 
