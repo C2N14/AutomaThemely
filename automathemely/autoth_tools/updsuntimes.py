@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import logging
 from datetime import timedelta
 from time import sleep
 
@@ -7,8 +8,6 @@ import tzlocal
 from astral import Location
 
 from automathemely.autoth_tools.utils import get_local, verify_desktop_session
-
-import logging
 
 logger = logging.getLogger(__name__)
 

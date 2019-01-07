@@ -84,6 +84,15 @@ def scan_comboboxtext_descendants(obj, match):
 
 
 def display_row_separators(row, before):
+    # This was added in GTK 3.14, but since it really doesn't make much of a difference and is purely aesthetic, and
+    # prevents it from running on GTK 3.10 lets just set this when it is possible but not enforce it
+    # noinspection PyBroadException
+    try:
+        row.set_activatable(False)
+        row.set_selectable(False)
+    except:
+        pass
+
     if before:
         row.set_header(Gtk.Separator())
 

@@ -19,7 +19,7 @@ with open('README.md') as fh:
 setup(
     name='AutomaThemely',
     version=version,
-    description='Simple, set-and-forget python application for changing between GNOME themes according to light and '
+    description='Simple, set-and-forget python application for changing between desktop themes according to light and '
                 'dark hours',
     long_description=long_description,
     author='Adrian Salgado',
@@ -31,8 +31,8 @@ setup(
     install_requires=['requests', 'astral', 'pytz', 'tzlocal', 'schedule'],
     include_package_data=True,
     package_data={
-        'automathemely': get_package_files('automathemely/lib') + ['../automathemely/bin/systemd-trigger.sh']
-                         + ['../automathemely/bin/kde-refresh-gtk2']},
+        'automathemely': get_package_files('automathemely/lib')
+                         + ['../automathemely/bin/systemd-trigger.sh'] + ['../automathemely/bin/kde-refresh-gtk2']},
     data_files=[
         ('share/icons/hicolor/scalable/apps', ['automathemely/lib/automathemely.svg']),
         ('share/applications', ['automathemely/lib/automathemely.desktop'])

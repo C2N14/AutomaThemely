@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import logging
 import pickle as pkl
 
 from automathemely.autoth_tools.utils import get_local, read_dict, write_dic
 
-import logging
 logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()

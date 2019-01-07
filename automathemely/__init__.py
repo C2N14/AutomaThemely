@@ -1,11 +1,11 @@
+import logging
 from pathlib import Path
 from sys import stdout, stderr
-import logging
+from automathemely.autoth_tools.utils import get_local, notify
 
 _ROOT = str(Path(__file__).resolve().parent)
-__version__ = 1.25
+__version__ = 1.3
 
-from automathemely.autoth_tools.utils import get_local, notify
 
 # Move/rename older local config directory name to the new lowercase one
 if Path.home().joinpath('.config', 'AutomaThemely').is_dir():
@@ -48,7 +48,8 @@ notifier_handler.setLevel(logging.INFO)
 logging.basicConfig(
     # filename=get_local('automathemely.log'),
     # filemode='w',
-    level=logging.DEBUG,
+    # level=logging.DEBUG,
+    level=logging.INFO,
     handlers=(main_file_handler,
               info_or_lower_handler,
               warning_or_higher_handler,

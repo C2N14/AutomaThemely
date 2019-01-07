@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=AutomaThemely
-Comment=Unity & GNOME python application for changing between themes periodically.
+Comment=Python application for changing between desktop themes periodically.
 Exec=automathemely --manage
 Icon=automathemely
 Terminal=false

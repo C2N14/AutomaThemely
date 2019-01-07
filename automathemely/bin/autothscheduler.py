@@ -5,9 +5,8 @@ from datetime import datetime
 
 from schedule import Scheduler, CancelJob
 
-from automathemely.autoth_tools.utils import get_local
 from automathemely import info_or_lower_handler, warning_or_higher_handler, scheduler_file_handler, timed_details_format
-
+from automathemely.autoth_tools.utils import get_local
 
 logger = logging.getLogger('autothscheduler.py')
 logger.propagate = False

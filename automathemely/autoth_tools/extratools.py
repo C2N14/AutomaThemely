@@ -15,7 +15,6 @@ def scan_vscode_extensions(path):
         for k in next(os.walk(path))[1]:
             if 'theme' in k:
                 with Path(path).joinpath(k, 'package.json').open() as f:
-                # with open(os.path.join(path, k, 'package.json')) as f:
                     data = json.load(f)
                     if 'themes' in data['contributes']:
                         for i in data['contributes']['themes']:
@@ -73,26 +72,23 @@ def get_installed_extra_themes(extra):
 
 
 def set_extra_theme(us_se, extra, theme_type):
-    import getpass
     import fileinput
-    from sys import stdout
-    username = getpass.getuser()
+    import sys
     if extra == 'atom':
 
         target_file = Path.home().joinpath('.atom', 'config.cson')
-        if not Path(target_file).is_file():
+        if not target_file.is_file():
             logger.error('Atom config file not found')
             return
 
         lines_below_keyword = 0
-        for line in fileinput.input(target_file, inplace=True):
+        for line in fileinput.input(str(target_file), inplace=True):
             # First look for line with the keyword "themes", then write lines
             if line.strip().startswith('themes:'):
-                lines_below_keyword = 1
-                stdout.write(line)
-                continue
+                sys.stdout.write(line)
+                lines_below_keyword += 1
 
-            if lines_below_keyword == 1:
+            elif lines_below_keyword == 1:
                 # Make sure it has the same spaces as the original file
                 preceding_spaces = ' ' * (len(line) - len(line.lstrip(' ')))
                 print(preceding_spaces + '"' + us_se['extras']['atom']['themes'][theme_type]['theme'] + '"')
@@ -102,22 +98,27 @@ def set_extra_theme(us_se, extra, theme_type):
                 # Make sure it has the same spaces as the original file
                 preceding_spaces = ' ' * (len(line) - len(line.lstrip(' ')))
                 print(preceding_spaces + '"' + us_se['extras']['atom']['themes'][theme_type]['syntax'] + '"')
+                lines_below_keyword += 1
 
             else:
-                stdout.write(line)
+                sys.stdout.write(line)
 
     elif extra == 'vscode':
-        target_file = '/home/{}/.config/Code/User/settings.json'.format(username)
-        if not Path(target_file).is_file():
-            logger.error('VSCode config file not found')
+        target_file = Path.home().joinpath('.config', 'Code', 'User', 'settings.json')
+        if not target_file.parent.is_dir():
+            logger.error('VSCode config directory not found')
             return
 
-        with open(target_file) as f:
-            p = json.load(f)
+        # Sometimes the settings file is not present until the user changes a setting
+        if target_file.is_file():
+            with target_file.open() as f:
+                p = json.load(f)
+        else:
+            p = dict()
 
         p['workbench.colorTheme'] = us_se['extras']['vscode']['themes'][theme_type]
 
-        with open(target_file, 'w') as f:
+        with target_file.open(mode='w') as f:
             json.dump(p, f, indent=4)
 
 

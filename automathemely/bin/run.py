@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import logging
 import pickle as pkl
 import shutil
 import sys
@@ -10,7 +11,6 @@ from pathlib import Path
 import pytz
 import tzlocal
 
-import logging
 logger = logging.getLogger(__name__)
 
 
