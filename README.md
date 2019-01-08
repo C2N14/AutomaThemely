@@ -31,6 +31,8 @@ Thus you can add support it even if not listed above (although if you'd like to 
 
 ### Installing
 
+#### Releases
+
 Go to [releases](https://github.com/C2N14/AutomaThemely/releases) and download whichever package suits your needs
 
 Because of the several python versions different distros have, and the current state and limitations of the packager used, here are my recommendations for the following distros:
@@ -40,6 +42,14 @@ Because of the several python versions different distros have, and the current s
 | Ubuntu 16.04 | Manually install all the python dependencies with pip3 and install the python 3.5 no dependencies package |
 | Ubuntu 18.04 | Just install the regular python 3.6 package and all the dependencies should be available |
 | Other distros | Check your python version, and if it is equal or above 3.5 but not listed in the releases page you can try [packaging it yourself](https://github.com/C2N14/AutomaThemely/wiki/Packaging-it-yourself)
+
+#### Packages
+
+Some distros, however, may have their own maintainers:
+
+| Distro | Package name/Link |
+| --- | --- |
+| Arch Linux | [`automathemely`](https://aur.archlinux.org/packages/automathemely/)
 
 ### Running
 

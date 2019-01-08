@@ -77,7 +77,7 @@ def main(us_se):
         else:
             key_list = [to_set_key]
 
-        if read_dict(us_se, key_list):
+        if read_dict(us_se, key_list) is not None:
             write_dic(us_se, key_list, to_set_val)
 
             with open(get_local('user_settings.json'), 'w') as file:

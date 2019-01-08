@@ -16,7 +16,7 @@ tee "/etc/xdg/autostart/automathemely.desktop" <<EOF > /dev/null
 [Desktop Entry]
 Type=Application
 Name=AutomaThemely
-Comment=Unity & GNOME python application for changing between themes periodically.
+Comment=Python application for changing between desktop themes periodically.
 Exec=/usr/bin/env python3 ${packdir}/bin/autothscheduler.py
 Icon=automathemely
 EOF
