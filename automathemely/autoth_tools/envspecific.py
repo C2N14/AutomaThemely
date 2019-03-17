@@ -3,6 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 # GTK, Cinnamon's desktop and GNOME shell themes all share the same dirs, but have different structures and conditions
@@ -26,6 +27,9 @@ PATH_CONSTANTS = {
     'kde-gtk-config': {
         'gtk3': str(HOME.joinpath('.config/gtk-3.0/settings.ini')),
         'gtk2': str(HOME.joinpath('.gtkrc-2.0'))
+    },
+    'special-paths': {
+        'gtk': ('/snap/communitheme/current/share/themes',)
     }
 }
 SUPPORTED_DESKENVS = ('gnome', 'kde', 'xfce', 'cinnamon')
@@ -102,8 +106,9 @@ def get_installed_themes(desk_env):
 
     # Actually start scanning for themes
     if types['gtk']:
-        t_list = walk_filter_dirs(PATH_CONSTANTS['general-themes'], lambda parent, t: Path(parent)
-                                  .joinpath(t).glob('gtk-3.*/gtk.css') and t.lower() != 'default')
+        t_list = walk_filter_dirs(PATH_CONSTANTS['general-themes'] + PATH_CONSTANTS['special-paths']['gtk'],
+                                  lambda parent, t: Path(parent).joinpath(t).glob('gtk-3.*/gtk.css')
+                                  and t.lower() != 'default')
         themes['gtk'] = [(t,) for t in sort_remove_dupes(t_list)]
 
     if types['icons']:

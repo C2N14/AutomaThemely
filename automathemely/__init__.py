@@ -4,7 +4,7 @@ from sys import stdout, stderr
 from automathemely.autoth_tools.utils import get_local, notify
 
 _ROOT = str(Path(__file__).resolve().parent)
-__version__ = "1.3.0-dev"
+__version__ = "1.3.0-dev1"
 
 
 # Move/rename older local config directory name to the new lowercase one

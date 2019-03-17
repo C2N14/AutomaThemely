@@ -2552,6 +2552,7 @@
                                                 </child>
                                                 <child>
                                                   <object class="GtkListBoxRow">
+                                                    <property name="name">MUST BE</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <child>
@@ -2595,6 +2596,69 @@
                                                       </object>
                                                     </child>
                                                   </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                            <style>
+                                              <class name="frame-row"/>
+                                            </style>
+                                          </object>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkAlignment">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="top_padding">18</property>
+                                        <child>
+                                          <object class="GtkFrame">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="label_xalign">0</property>
+                                            <property name="label_yalign">1</property>
+                                            <property name="shadow_type">in</property>
+                                            <child>
+                                              <object class="GtkGrid">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="margin_left">12</property>
+                                                <property name="margin_right">12</property>
+                                                <property name="margin_top">8</property>
+                                                <property name="margin_bottom">8</property>
+                                                <property name="hexpand">True</property>
+                                                <property name="vexpand">True</property>
+                                                <property name="column_spacing">12</property>
+                                                <child>
+                                                  <object class="GtkLabel">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">False</property>
+                                                    <property name="halign">start</property>
+                                                    <property name="valign">center</property>
+                                                    <property name="hexpand">True</property>
+                                                    <property name="vexpand">True</property>
+                                                    <property name="label" translatable="yes">Custom config directory</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="left_attach">0</property>
+                                                    <property name="top_attach">0</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkEntry" id="*extras.vscode.custom_config_dir">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <signal name="changed" handler="on_any_change" swapped="no"/>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="left_attach">1</property>
+                                                    <property name="top_attach">0</property>
+                                                  </packing>
                                                 </child>
                                               </object>
                                             </child>
@@ -3439,6 +3503,7 @@
       <widget name="*themes.cinnamon.dark.desktop"/>
       <widget name="*themes.cinnamon.dark.icons"/>
       <widget name="*themes.kde.light.gtk"/>
+      <widget name="*extras.vscode.custom_config_dir"/>
     </widgets>
   </object>
 </interface>

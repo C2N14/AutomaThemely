@@ -59,7 +59,9 @@ def get_installed_extra_themes(extra):
         # All possible paths that I know of that can contain VSCode extensions
         vscode_extensions_paths = ['/snap/vscode/current/usr/share/code/resources/app/extensions',
                                    '/usr/share/code/resources/app/extensions',
-                                   str(Path.home().joinpath('.vscode', 'extensions'))]
+                                   str(Path.home().joinpath('.vscode', 'extensions')),
+                                   '/usr/lib/extensions',
+                                   '/opt/visual-studio-code/resources/app/extensions']
         vscode_themes = []
         for p in vscode_extensions_paths:
             vscode_themes += scan_vscode_extensions(p)
@@ -105,6 +107,12 @@ def set_extra_theme(us_se, extra, theme_type):
 
     elif extra == 'vscode':
         target_file = Path.home().joinpath('.config', 'Code', 'User', 'settings.json')
+        if us_se['extras']['vscode']['custom_config_dir']:
+            if Path(us_se['extras']['vscode']['custom_config_dir']).joinpath('settings.json').is_file():
+                target_file = Path(us_se['extras']['vscode']['custom_config_dir']).joinpath('settings.json')
+            else:
+                logger.error('Invalid VSCode config directory, falling back to default')
+
         if not target_file.parent.is_dir():
             logger.error('VSCode config directory not found')
             return
