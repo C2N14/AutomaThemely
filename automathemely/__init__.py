@@ -4,7 +4,7 @@ from sys import stdout, stderr
 from automathemely.autoth_tools.utils import get_local, notify
 
 _ROOT = str(Path(__file__).resolve().parent)
-__version__ = 1.3
+__version__ = "1.3.0-dev"
 
 
 # Move/rename older local config directory name to the new lowercase one
@@ -39,7 +39,7 @@ warning_or_higher_handler = logging.StreamHandler(stderr)
 warning_or_higher_handler.setLevel(logging.WARNING)
 # This will be added in run.py if notifications are enabled
 # TODO: Figure out a better way to handle notifications that is as flexible as this that doesn't spam the user in case
-# one of the imported libraries malfunctions and decide to also use this root logger
+# one of the imported libraries malfunctions and decides to also use this root logger
 notifier_handler = NotifyHandler()
 notifier_handler.setLevel(logging.INFO)
 
@@ -49,7 +49,7 @@ logging.basicConfig(
     # filename=get_local('automathemely.log'),
     # filemode='w',
     # level=logging.DEBUG,
-    level=logging.INFO,
+    level=logging.DEBUG,
     handlers=(main_file_handler,
               info_or_lower_handler,
               warning_or_higher_handler,

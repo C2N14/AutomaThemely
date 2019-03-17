@@ -55,12 +55,18 @@ def main():
 
     #   If settings files versions don't match (in case of an update for instance), overwrite values of
     #   default_settings with user_settings and use that instead
-    if 'version' not in user_settings or user_settings['version'] != version:
+
+    logger.debug('Program version = {}'.format(version))
+    logger.debug('File version = {}'.format(str(user_settings['version'])))
+    if 'version' not in user_settings or str(user_settings['version']) != version:
         with open(get_resource('default_user_settings.json'), 'r') as f:
             default_settings = json.load(f)
 
+        from pkg_resources import parse_version
+
         # Hardcoded attempt to try to import old structure to new structure...
-        if user_settings['version'] <= 1.2:
+        if parse_version(str(user_settings['version'])) <= parse_version('1.2'):
+            logger.debug('Lower version!')
             user_settings['themes']['gnome'] = dict()
             user_settings['themes']['gnome']['light'], user_settings['themes']['gnome']['dark'] = dict(), dict()
             user_settings['themes']['gnome']['light']['gtk'] = user_settings['themes'].pop('light', '')
