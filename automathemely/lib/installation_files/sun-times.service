@@ -1,0 +1,8 @@
+[Unit]
+Description=Update automathemely sun times daily
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash <PACKDIR>/bin/systemd-trigger.sh "/.config/automathemely/sun_times" "/usr/bin/env python3 <PACKDIR>/autoth_tools/updsuntimes.py"

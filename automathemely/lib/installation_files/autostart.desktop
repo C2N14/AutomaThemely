@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=AutomaThemely
+Comment=Python application for changing between desktop themes periodically.
+Exec=/usr/bin/env python3 <PACKDIR>/bin/autothscheduler.py
+Icon=automathemely
+Name[en_US]=autostart.desktop

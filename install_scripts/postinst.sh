@@ -1,63 +1,83 @@
 #!/bin/bash
 
-USER_HOME="$(getent passwd $SUDO_USER | cut -d: -f6)"
-packdir="$(sudo -u ${SUDO_USER} python3 -m pip show automathemely | grep -oP "^Location: \K.*")/automathemely"
+packdir="$(python3 -m pip show automathemely | grep -oP "^Location: \K.*")/automathemely"
 
 if_not_dir_create () {
-  if [ ! -d "$1" ]; then
+  if [[ ! -d "$1" ]]; then
   mkdir -p "$1"
   fi
 }
 
-# Autostart HEREDOC
-autostart_path="/etc/xdg/autostart/automathemely.desktop"
-if_not_dir_create "$(dirname "$autostart_path")"
-tee "/etc/xdg/autostart/automathemely.desktop" <<EOF > /dev/null
-[Desktop Entry]
-Type=Application
-Name=AutomaThemely
-Comment=Python application for changing between desktop themes periodically.
-Exec=/usr/bin/env python3 ${packdir}/bin/autothscheduler.py
-Icon=automathemely
-EOF
 
-# Timer & service HEREDOCS
-systemd_user_path="/usr/lib/systemd/user"
+local_install=false
+## CHECK FOR ROOT PRIVILEGES
+if ((${EUID:-0} || "$(id -u)")); then
+
+    if [[ -z "$SUDO_USER" ]]; then
+        echo "SUDO_USER variable not found, trying to find user manually..."
+        SUDO_USER=$(logname)
+        SUDO_UID=$(id -u ${SUDO_USER})
+
+        if [[ -z "$SUDO_USER" ]]; then
+            echo "Could not find SUDO_USER, falling back to local only installation..."
+            local_install=true
+        fi
+
+    fi
+
+else
+    echo "Root privileges not detected, falling back to local only installation..."
+    local_install=true
+
+fi
+
+
+## SET RELEVANT VARIABLES
+if [[ "$local_install" = true ]]; then
+    autostart_path="$HOME/.config/autostart"
+    systemd_user_path="$HOME/.config/systemd/user"
+    echo "NOTE: AutomaThemely is disabled from autostarting by default on local installation"
+
+else
+    autostart_path="/etc/xdg/autostart"
+    systemd_user_path="/usr/lib/systemd/user"
+
+fi
+
+
+## MOVE FILES TO LOCATIONS
+# Autostart on user log in
+if_not_dir_create "$autostart_path"
+cp "$packdir/installation_files/autostart.desktop" "$autostart_path/automathemely.desktop"
+sed -i "s|<PACKDIR>|$packdir|g" "$autostart_path/automathemely.desktop"
+
+# Timer & service units
 if_not_dir_create "$systemd_user_path"
+cp "$packdir/installation_files/sun-times.timer" "$systemd_user_path/automathemely.timer"
+cp "$packdir/installation_files/sun-times.service" "$systemd_user_path/automathemely.service"
+sed -i "s|<PACKDIR>|$packdir|g" "$systemd_user_path/automathemely.service"
 
-tee "$systemd_user_path/automathemely.timer" <<EOF > /dev/null
-[Unit]
-Description=Update automathemely sun times daily
 
-[Timer]
-OnCalendar=daily
-Persistent=true
+## ENABLE SYSTEMD
+if [[ "$local_install" = true ]]; then
+    systemctl --user daemon-reload
+    systemctl --user enable automathemely.timer
+    systemctl --user start automathemely.timer
 
-[Install]
-WantedBy=timers.target
-EOF
+else
+    # Export some vars required to make some systemd user commands work
+    export XDG_RUNTIME_DIR="/run/user/${SUDO_UID}"
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 
-tee "$systemd_user_path/automathemely.service" <<EOF > /dev/null
-[Unit]
-Description=Update automathemely sun times daily
-After=network-online.target
-Wants=network-online.target
+    sudo -E -u ${SUDO_USER} systemctl --user --global daemon-reload
+    sudo systemctl --global enable automathemely.timer
+    sudo -E -u ${SUDO_USER} systemctl --user --global start automathemely.timer
 
-[Service]
-Type=oneshot
-ExecStart=/bin/bash ${packdir}/bin/systemd-trigger.sh "/.config/automathemely/sun_times" "/usr/bin/env python3 ${packdir}/autoth_tools/updsuntimes.py"
-EOF
+fi
 
-# Export some vars required to make some systemd user commands work
-export XDG_RUNTIME_DIR="/run/user/${SUDO_UID}"
-export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 
-sudo -E -u $SUDO_USER systemctl --user --global daemon-reload
-sudo systemctl --user --global enable automathemely.timer
-sudo -E -u $SUDO_USER systemctl --user --global start automathemely.timer
-
-# REMOVE OBSOLETE STUFF
+## REMOVE OBSOLETE STUFF
 # Crontab removal
 # If crontabs are not installed carries on
-(crontab -u $SUDO_USER -l | awk ' !/sunrise_change_theme/ && !/sunset_change_theme/ && !/update_sunhours_daily/ && !/update_sunhours_reboot/ { print }' | crontab -u $SUDO_USER -) || true
+(crontab -u ${SUDO_USER} -l | awk ' !/sunrise_change_theme/ && !/sunset_change_theme/ && !/update_sunhours_daily/ && !/update_sunhours_reboot/ { print }' | crontab -u ${SUDO_USER} -) || true
 
