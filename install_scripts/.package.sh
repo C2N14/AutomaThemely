@@ -9,7 +9,7 @@ if_not_dir_create () {
 declare -a outputs=("deb" "rpm" "sh")
 declare -a pypacks=("astral" "requests" "tz" "tzlocal" "schedule")
 declare -a otherdeps=("python3-pip")
-declare -a python_versions=("3.5" "3.6")
+declare -a python_versions=("3.5" "3.6" "3.7")
 
 declare -a original_files=(*)
 
