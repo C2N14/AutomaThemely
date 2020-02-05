@@ -140,12 +140,12 @@ def run_scripts(scripts, notifications_enabled):
     for n, script in scripts.items():
         if not script:
             continue
-        elif not Path(script).is_file():
+        elif not Path(script).expanduser().is_file():
             logger.error('Script file {} not found'.format(n))
             error_message = 'One or more of the script files was/were not found'
         else:
             try:
-                run([script], check=True)
+                run([os.path.expanduser(script)], check=True)
             except Exception as e:
                 logger.exception('Error while running {}'.format(script), exc_info=e)
                 error_message = 'One or more of the script files failed to run'
