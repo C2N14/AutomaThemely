@@ -5,7 +5,7 @@ from time import sleep
 
 import pytz
 import tzlocal
-from astral import Location
+from astral import LocationInfo
 
 from automathemely.autoth_tools.utils import get_local, verify_desktop_session
 
