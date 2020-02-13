@@ -5,7 +5,7 @@ from time import sleep
 
 import pytz
 import tzlocal
-from astral import Location
+from astral import LocationInfo
 
 from automathemely.autoth_tools.utils import get_local, verify_desktop_session
 
@@ -63,7 +63,7 @@ def main(us_se):
         loc = us_se['location']['manual']
 
     try:
-        location = Location()
+        location = LocationInfo()
         location.name = loc['city']
         location.region = loc['region']
         location.latitude = loc['latitude']
