@@ -13,14 +13,15 @@ def scan_vscode_extensions(path):
     t_list = []
     try:
         for k in next(os.walk(path))[1]:
-            with Path(path).joinpath(k, 'package.json').open() as f:
-                data = json.load(f)
-                if 'themes' in data['contributes']:
-                    for i in data['contributes']['themes']:
-                        if 'id' in i:
-                            t_list.append(i['id'])
-                        elif 'label' in i:
-                            t_list.append(i['label'])
+            if k.startswith('theme-'):
+                with Path(path).joinpath(k, 'package.json').open() as f:
+                    data = json.load(f)
+                    if 'themes' in data['contributes']:
+                        for i in data['contributes']['themes']:
+                            if 'id' in i:
+                                t_list.append(i['id'])
+                            elif 'label' in i:
+                                t_list.append(i['label'])
     except StopIteration:
         pass
 
