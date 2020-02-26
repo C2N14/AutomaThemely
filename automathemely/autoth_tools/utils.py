@@ -27,7 +27,7 @@ def read_dict(dic, keys):
     for k in keys:
         try:
             dic = dic[k]
-        except KeyError:
+        except (KeyError, TypeError):
             return
     return dic
 
@@ -38,13 +38,13 @@ def write_dic(dic, keys, value):
     dic[keys[-1]] = value
 
 
-def update_dict(d, u):
-    for k, v in u.items():
+def merge_dict(original_dic, new_dic):
+    for k, v in new_dic.items():
         if isinstance(v, collections.Mapping):
-            d[k] = update_dict(d.get(k, {}), v)
+            original_dic[k] = merge_dict(original_dic.get(k, {}), v)
         else:
-            d[k] = v
-    return d
+            original_dic[k] = v
+    return original_dic
 
 
 #   MISC FUNCTIONS
@@ -66,7 +66,7 @@ def notify(message, title='AutomaThemely'):
             raise e
 
 
-def pgrep(process_names, use_full=False):
+def pgrep_any(process_names, use_full=False):
     from subprocess import run, DEVNULL
     command = ['pgrep']
     if use_full:
@@ -76,13 +76,14 @@ def pgrep(process_names, use_full=False):
         p = run(p_command, stdout=DEVNULL)
         if p.returncode == 0:
             return True
+    return False
 
 
 def verify_desktop_session(wait=False):
     import time
     while True:
         # noinspection SpellCheckingInspection
-        if pgrep(['gnome-session', 'plasmashell', 'cinnamon-sessio', 'xfce4-session']):
+        if pgrep_any(['gnome-session', 'plasmashell', 'cinnamon-sessio', 'xfce4-session']):
             if not wait:
                 return True
             break

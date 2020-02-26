@@ -22,25 +22,28 @@ options.add_argument('-r', '--restart',
 
 
 #   For --list arg
-def print_list(d, indent=0):
+def print_formatted(d, indent=0):
     for key, value in d.items():
         print('{}{}'.format('\t' * indent, key), end='')
         if isinstance(value, dict):
             print('.')
-            print_list(value, indent + 1)
+            print_formatted(value, indent + 1)
         else:
             print(' = {}'.format(value))
 
 
 #   ARGUMENTS FUNCTION
-def main(us_se):
+def main():
+    from automathemely.autoth_tools.settsmanager import UserSettings
+
     args = parser.parse_args()
+    settings = UserSettings()
 
     #   LIST
     if args.list:
         logger.info('Printing current settings...')
         print('')
-        print_list(us_se)
+        print_formatted(settings.get_dictionary())
         return
 
     #   SET
@@ -50,12 +53,12 @@ def main(us_se):
             return
 
         setts = args.setting.split('=')
-        to_set_key = setts[0].strip()
+        to_set_path = setts[0].strip()
         to_set_val = setts[1].strip()
 
-        if to_set_key == '':
+        if to_set_path == '':
             logger.error('Invalid string (Empty key)')
-        elif to_set_key[-1] == '.':
+        elif to_set_path[-1] == '.':
             logger.error('Invalid string (Key ends in dot)')
         if not to_set_val:
             logger.error('Invalid string (Empty value)')
@@ -72,33 +75,27 @@ def main(us_se):
                 except ValueError:
                     pass
 
-        if to_set_key.count('.') > 0:
-            key_list = [s.strip() for s in to_set_key.split('.')]
-        else:
-            key_list = [to_set_key]
+        if settings.get_setting(to_set_path) is not None:
+            settings.set_setting(to_set_path, to_set_val)
 
-        if read_dict(us_se, key_list) is not None:
-            write_dic(us_se, key_list, to_set_val)
-
-            with open(get_local('user_settings.json'), 'w') as file:
-                json.dump(us_se, file, indent=4)
+            settings.dump()
 
             # Warning if user disables auto by --setting
-            if 'enabled' in to_set_key and not to_set_val:
+            if 'enabled' in to_set_path and to_set_val is False:
                 logger.warning('Remember to set all the necessary values with either --settings or --manage')
-            logger.info('Successfully set key "{}" as "{}"'.format(to_set_key, to_set_val))
-            exit()
+            logger.info('Successfully set "{}" as "{}"'.format(to_set_path, to_set_val))
+            return
 
         else:
-            logger.error('Key "{}" not found'.format(to_set_key))
+            logger.error('Path "{}" not found'.format(to_set_path))
 
         return
 
     #   MANAGE
     elif args.manage:
-        from . import settsmanager
+        from . import settsmanagergui
         #   From here on the manager takes over 'til exit
-        settsmanager.main(us_se)
+        settsmanagergui.main()
         return
 
     #   UPDATE
@@ -113,9 +110,9 @@ def main(us_se):
 
     #   RESTART
     elif args.restart:
-        from automathemely.autoth_tools.utils import pgrep, get_bin
+        from automathemely.autoth_tools.utils import pgrep_any, get_bin
         from subprocess import Popen, DEVNULL
-        if pgrep(['autothscheduler.py'], use_full=True):
+        if pgrep_any(['autothscheduler.py'], use_full=True):
             Popen(['pkill', '-f', 'autothscheduler.py']).wait()
         Popen(['python3', get_bin('autothscheduler.py')], start_new_session=True, stdout=DEVNULL, stderr=DEVNULL)
         logger.info('Restarted the scheduler')

@@ -34,12 +34,16 @@ def get_loc_from_ip():
     return
 
 
-def main(us_se):
-    if 'location' not in us_se:
+def main():
+    from automathemely.autoth_tools.settsmanager import UserSettings
+
+    settings = UserSettings()
+
+    if not settings.get_setting('location'):
         logger.error('Invalid config file')
         return
 
-    if us_se['location']['auto_enabled']:
+    if settings.get_setting('location.auto_enabled'):
         loc = get_loc_from_ip()
         if loc:
             loc = loc.json()
@@ -51,7 +55,7 @@ def main(us_se):
         loc['time_zone'] = tzlocal.get_localzone().zone
 
     else:
-        for k, v in us_se['location']['manual'].items():
+        for k, v in settings.get_setting('location.manual').items():
             try:
                 val = v.strip()
             except AttributeError:
@@ -60,7 +64,7 @@ def main(us_se):
                 if not val:
                     logger.error('Auto location is not enabled and some manual values are missing')
                     return
-        loc = us_se['location']['manual']
+        loc = settings.get_setting('location.manual')
 
     try:
         location = Location()
@@ -73,8 +77,8 @@ def main(us_se):
         logger.error(str(e))
         return
 
-    sunrise = location.sun()['sunrise'].replace(second=0) + timedelta(minutes=us_se['offset']['sunrise'])
-    sunset = location.sun()['sunset'].replace(second=0) + timedelta(minutes=us_se['offset']['sunset'])
+    sunrise = location.sun()['sunrise'].replace(second=0) + timedelta(minutes=settings.get_setting('offset.sunrise'))
+    sunset = location.sun()['sunset'].replace(second=0) + timedelta(minutes=settings.get_setting('offset.sunset'))
 
     #   Convert to UTC for storage
     return sunrise.astimezone(pytz.utc), sunset.astimezone(pytz.utc)
@@ -110,10 +114,12 @@ if __name__ == '__main__':
     notifier_handler.setFormatter(logging.Formatter(default_simple_format))
     run_as_main_logger.addHandler(notifier_handler)
 
-    with open(get_local('user_settings.json'), 'r') as f:
-        user_settings = json.load(f)
+    from automathemely.autoth_tools.settsmanager import UserSettings
+    s = UserSettings()
+    s.load()
 
-    output = main(user_settings)
+    output = main()
+
     if output:
         with open(get_local('sun_times'), 'wb') as file:
             pkl.dump(output, file, protocol=pkl.HIGHEST_PROTOCOL)

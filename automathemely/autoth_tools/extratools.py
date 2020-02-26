@@ -72,7 +72,11 @@ def get_installed_extra_themes(extra):
             return {'themes': vscode_themes}
 
 
-def set_extra_theme(us_se, extra, theme_type):
+def set_extra_theme(extra, theme_type):
+    from automathemely.autoth_tools.settsmanager import UserSettings
+
+    settings = UserSettings()
+
     import fileinput
     import sys
     if extra == 'atom':
@@ -91,14 +95,17 @@ def set_extra_theme(us_se, extra, theme_type):
 
             elif lines_below_keyword == 1:
                 # Make sure it has the same spaces as the original file
-                preceding_spaces = ' ' * (len(line) - len(line.lstrip(' ')))
-                print(preceding_spaces + '"' + us_se['extras']['atom']['themes'][theme_type]['theme'] + '"')
+                # preceding_spaces = ' ' * (len(line) - len(line.lstrip(' ')))
+                # print(preceding_spaces + '"' + us_se['extras']['atom']['themes'][theme_type]['theme'] + '"')
+                print(' ' * (len(line) - len(line.lstrip(' '))) +
+                      '"' + settings.get_setting('extras.atom.themes.{}.theme'.format(theme_type)) + '"')
                 lines_below_keyword += 1
-
             elif lines_below_keyword == 2:
                 # Make sure it has the same spaces as the original file
-                preceding_spaces = ' ' * (len(line) - len(line.lstrip(' ')))
-                print(preceding_spaces + '"' + us_se['extras']['atom']['themes'][theme_type]['syntax'] + '"')
+                # preceding_spaces = ' ' * (len(line) - len(line.lstrip(' ')))
+                # print(preceding_spaces + '"' + us_se['extras']['atom']['themes'][theme_type]['syntax'] + '"')
+                print(' ' * (len(line) - len(line.lstrip(' '))) +
+                      '"' + settings.get_setting('extras.atom.themes.{}.syntax'.format(theme_type)) + '"')
                 lines_below_keyword += 1
 
             else:
@@ -106,9 +113,12 @@ def set_extra_theme(us_se, extra, theme_type):
 
     elif extra == 'vscode':
         target_file = Path.home().joinpath('.config', 'Code', 'User', 'settings.json')
-        if us_se['extras']['vscode']['custom_config_dir']:
-            if Path(us_se['extras']['vscode']['custom_config_dir']).joinpath('settings.json').is_file():
-                target_file = Path(us_se['extras']['vscode']['custom_config_dir']).joinpath('settings.json')
+        # if us_se['extras']['vscode']['custom_config_dir']:
+        if settings.get_setting('extras.vscode.custom_config_dir'):
+            # if Path(us_se['extras']['vscode']['custom_config_dir']).joinpath('settings.json').is_file():
+            if Path(settings.get_setting('extras.vscode.custom_config_dir')).joinpath('settings.json').is_file():
+                # target_file = Path(us_se['extras']['vscode']['custom_config_dir']).joinpath('settings.json')
+                target_file = Path(settings.get_setting('extras.vscode.custom_config_dir')).joinpath('settings.json')
             else:
                 logger.error('Invalid VSCode config directory, falling back to default')
 
@@ -123,7 +133,8 @@ def set_extra_theme(us_se, extra, theme_type):
         else:
             p = dict()
 
-        p['workbench.colorTheme'] = us_se['extras']['vscode']['themes'][theme_type]
+        # p['workbench.colorTheme'] = us_se['extras']['vscode']['themes'][theme_type]
+        p['workbench.colorTheme'] = settings.get_setting('extras.vscode.themes'.format(theme_type))
 
         with target_file.open(mode='w') as f:
             json.dump(p, f, indent=4)
