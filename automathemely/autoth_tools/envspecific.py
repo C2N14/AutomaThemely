@@ -94,6 +94,7 @@ def get_installed_themes(desk_env):
 
     if desk_env == 'gnome':
         types['shell'] = True
+        types['background'] = True
 
     elif desk_env == 'kde':
         types['lookandfeel'] = True
@@ -156,6 +157,19 @@ def get_installed_themes(desk_env):
                                    .joinpath(t, 'gnome-shell', 'gnome-shell.css').is_file() and t.lower() != 'default')
 
         themes['shell'] = [(t,) for t in sort_remove_dupes(t_list)]
+
+    if types['background']:
+        from gi.repository import Gio
+        gsettings = Gio.Settings.new("org.gnome.desktop.background")
+
+        current_background = ""
+        try:
+            # this stores file path in the format of file:///home/xxx/xxx.jpg
+            current_background = gsettings["picture-uri"]
+        except KeyError:
+            pass
+
+        themes['background'] = current_background
 
     return themes
 
@@ -352,3 +366,12 @@ def set_theme(desk_env, t_type, theme):
         from gi.repository import Gio
         cinnamon_settings = Gio.Settings.new('org.cinnamon.theme')
         cinnamon_settings['name'] = theme
+
+    elif t_type == 'background':
+        from gi.repository import Gio
+        gnome_gsettings = Gio.Settings.new("org.gnome.desktop.background")
+        # Perform some sane checking
+        if theme:
+            if not theme.startswith("file://"):
+                theme = "file://{}".format(theme)
+            gnome_gsettings["picture-uri"] = theme

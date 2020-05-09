@@ -223,6 +223,11 @@ class App(Gtk.Application):
                                                      step_increment=1, page_increment=5, page_size=0), 1, 0)
 
                     elif isinstance(obj, Gtk.Entry):
+                        if val is None and keys[-1] == "background":
+                            # try to load current background from system settings
+                            if self.system_themes and "background" in self.system_themes:
+                                val = self.system_themes["background"]
+
                         obj.set_text(try_or_default_type(val, str))
 
                     elif isinstance(obj, Gtk.Switch):
@@ -404,6 +409,37 @@ class App(Gtk.Application):
 
         add_button = self.builder.get_object('rowadd_button')
         add_button.set_sensitive(True)
+
+    def on_bg_choose_file(self, button, *args):
+        button_id = Gtk.Buildable.get_name(button)
+        sub_entry = split_id_delimiter(button_id)[1]
+        open_dialog = Gtk.FileChooserDialog("Pick a background", None,
+                                            Gtk.FileChooserAction.OPEN,
+                                           (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                            Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
+        # extract current text in textbox
+        entry = self.builder.get_object(sub_entry)
+        cur_filename = entry.get_text()
+        # set it as the default chosen file in dialog
+        open_dialog.set_file(Gio.File.new_for_path(cur_filename))
+        
+        open_dialog.set_local_only(True)
+        open_dialog.set_modal(True)
+        open_dialog.connect("response", self.open_response_cb, sub_entry)
+        open_dialog.show()
+
+    def open_response_cb(self, dialog, response_id, data):
+        entry = self.builder.get_object(data)
+
+        # chosen file
+        if response_id == Gtk.ResponseType.ACCEPT:
+            entry.set_text(dialog.get_filename())
+
+        # clears it
+        elif response_id == Gtk.ResponseType.CANCEL:
+            entry.set_text("")
+
+        dialog.destroy()
 
     def on_add_scripts_row(self, button, *args):
         active_listbox_page = self.builder.get_object('scripts_notebook').get_current_page()
