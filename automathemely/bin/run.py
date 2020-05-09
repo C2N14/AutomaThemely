@@ -82,9 +82,11 @@ def main():
         logging.getLogger().addHandler(automathemely.notifier_handler)
 
     #   If any argument is given, pass it/them to the arg manager module
+    manual_theme_set = None
     if len(sys.argv) > 1:
-        automathemely.autoth_tools.argmanager.main(user_settings)
-        return
+        manual_theme_set = automathemely.autoth_tools.argmanager.main(user_settings)
+        if manual_theme_set is None:
+            return
 
     # We don't want to proceed until we have given the user the chance to review its settings
     if first_time_run:
@@ -110,6 +112,9 @@ def main():
         t_color = 'light'
     else:
         t_color = 'dark'
+
+    if manual_theme_set is not None:
+        t_color = manual_theme_set
 
     logger.info('Switching to {} themes...'.format(t_color))
 
