@@ -81,10 +81,17 @@ def main():
         # Add the notification handler to the root logger
         logging.getLogger().addHandler(automathemely.notifier_handler)
 
+    theme = 'auto'
     #   If any argument is given, pass it/them to the arg manager module
     if len(sys.argv) > 1:
-        automathemely.autoth_tools.argmanager.main(user_settings)
-        return
+        mode = automathemely.autoth_tools.argmanager.main(user_settings)
+        # check if manual theme mode returned
+        if mode is None:
+            # auto theme mode; continue
+            return
+        else:
+            # set manual mode
+            theme = mode
 
     # We don't want to proceed until we have given the user the chance to review its settings
     if first_time_run:
@@ -106,10 +113,14 @@ def main():
     now = datetime.now(pytz.utc).astimezone(local_tz).time()
     sunrise, sunset = sunrise.astimezone(local_tz).time(), sunset.astimezone(local_tz).time()
 
-    if sunrise < now < sunset:
-        t_color = 'light'
+    if theme == 'auto':
+        if sunrise < now < sunset:
+            t_color = 'light'
+        else:
+            t_color = 'dark'
     else:
-        t_color = 'dark'
+        # set manual theme mode
+        t_color = theme
 
     logger.info('Switching to {} themes...'.format(t_color))
 
