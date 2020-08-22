@@ -10,8 +10,6 @@ from automathemely.autoth_tools.utils import get_resource, get_local, read_dict,
 # noinspection PyPep8
 from automathemely.autoth_tools import extratools, envspecific
 from automathemely.autoth_tools.settsmanager import UserSettings
-# noinspection PyPep8
-import json
 
 # noinspection PyPep8
 import logging
@@ -26,7 +24,7 @@ def split_id_delimiter(obj_id):
         return obj_id, None
 
 
-# Handle unexpected or invalid values in user_settings
+# For handling unexpected or invalid values in user_settings
 def try_or_default_type(val, try_type):
     try:
         return try_type(val)

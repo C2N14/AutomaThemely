@@ -12,9 +12,12 @@ class UserSettings:
     def __init__(self):
         with open(utils.get_resource('default_user_settings.json'), 'r') as f:
             self.default_settings_dictionary = json.load(f)
-            self.user_settings_dictionary = self.default_settings_dictionary.copy()
+            self.user_settings_dictionary = self.default_settings_dictionary.copy(
+            )
 
-    def load(self, file_path=utils.get_local('user_settings.json'), merge=True):
+    def load(self,
+             file_path=utils.get_local('user_settings.json'),
+             merge=True):
         with open(file_path, 'r') as f:
             # Catch bad JSON file
             try:
@@ -31,7 +34,8 @@ class UserSettings:
             json.dump(self.user_settings_dictionary, f, indent=4)
 
     def merge_with_default(self):
-        self.user_settings_dictionary = utils.merge_dict(self.default_settings_dictionary, self.user_settings_dictionary)
+        self.user_settings_dictionary = utils.merge_dict(
+            self.default_settings_dictionary, self.user_settings_dictionary)
 
     def get_setting(self, path, pop=False):
         keys_list = [s.strip() for s in path.split('.')]
@@ -46,8 +50,8 @@ class UserSettings:
         return self.user_settings_dictionary.copy()
 
     def set_dictionary(self, dictionary):
-        self.user_settings_dictionary = utils.merge_dict(self.default_settings_dictionary, dictionary)
-
+        self.user_settings_dictionary = utils.merge_dict(
+            self.default_settings_dictionary, dictionary)
 
     def DEV_print(self, dict_type):
         if dict_type == 'default':
