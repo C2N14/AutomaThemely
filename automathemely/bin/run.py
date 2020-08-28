@@ -82,9 +82,11 @@ def main():
         logging.getLogger().addHandler(automathemely.notifier_handler)
 
     #   If any argument is given, pass it/them to the arg manager module
+    t_color = None
     if len(sys.argv) > 1:
-        automathemely.autoth_tools.argmanager.main(user_settings)
-        return
+        t_color = automathemely.autoth_tools.argmanager.main(user_settings)
+        if not t_color:
+            return
 
     # We don't want to proceed until we have given the user the chance to review its settings
     if first_time_run:
@@ -106,7 +108,9 @@ def main():
     now = datetime.now(pytz.utc).astimezone(local_tz).time()
     sunrise, sunset = sunrise.astimezone(local_tz).time(), sunset.astimezone(local_tz).time()
 
-    if sunrise < now < sunset:
+    if t_color:
+        pass
+    elif sunrise < now < sunset:
         t_color = 'light'
     else:
         t_color = 'dark'
