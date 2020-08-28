@@ -19,7 +19,7 @@ options.add_argument('-u', '--update', help='update the sunrise and sunset\'s ti
 options.add_argument('-r', '--restart',
                      help='(re)start the scheduler script if it were to not start or stop unexpectedly',
                      action='store_true', default=False)
-
+options.add_argument('-t', '--theme', action='store', default='dark', choices=['dark', 'light'])
 
 #   For --list arg
 def print_list(d, indent=0):
@@ -119,3 +119,6 @@ def main(us_se):
             Popen(['pkill', '-f', 'autothscheduler.py']).wait()
         Popen(['python3', get_bin('autothscheduler.py')], start_new_session=True, stdout=DEVNULL, stderr=DEVNULL)
         logger.info('Restarted the scheduler')
+    elif args.theme:
+        return args.theme
+
