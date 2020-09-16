@@ -36,8 +36,9 @@ PATH_CONSTANTS = {
 # ===============================
 
 
-# Theming SUPER base class
 class Theming:
+    """Theming SUPER base class"""
+
     themes = None
 
     def set_to(self, theme):
@@ -54,14 +55,14 @@ class Theming:
         return self.themes.get_all()
 
 
-# Generic desktop theming
 class DesktopTheming(Theming):
+    """Generic desktop theming"""
     pass
 
 
 # -----------------------
-# GTK Theming
 class GtkTheming(DesktopTheming):
+    """Generic theming for GTK"""
     def __init__(self):
         self.gsettings_string = 'org.gnome.desktop.interface'
         self.themes = DirectoryFilter(self.valid_themes_filter,
@@ -82,11 +83,13 @@ class GtkTheming(DesktopTheming):
 
 # exactly the same
 class GnomelikeGtkTheming(GtkTheming):
+    """Theming for GNOME-like GTK"""
     pass
 
 
 # slight difference
 class CinnamonGtkTheming(GtkTheming):
+    """Theming for Cinnamon GTK"""
     def __init__(self):
         super().__init__()
 
@@ -95,6 +98,7 @@ class CinnamonGtkTheming(GtkTheming):
 
 # way different
 class XfceGtkTheming(GtkTheming):
+    """Theming for XFCE GTK"""
     def set_to(self, theme):
 
         # not sure if you need to do this, but we'll do it anyway
@@ -108,6 +112,7 @@ class XfceGtkTheming(GtkTheming):
 
 
 class KdeGtkTheming(GtkTheming):
+    """Theming for KDE GTK"""
     def set_to(self, theme):
         super().set_to(theme)
 
@@ -116,8 +121,8 @@ class KdeGtkTheming(GtkTheming):
 
 
 # -----------------------
-# GTK Icons Theming
 class GtkIconsTheming(DesktopTheming):
+    """Generic theming for GTK Icons"""
     def __init__(self):
         self.gsettings_string = 'org.gnome.desktop.interface'
         self.themes = DirectoryFilter(self.valid_themes_filter,
@@ -136,10 +141,12 @@ class GtkIconsTheming(DesktopTheming):
 
 
 class GnomelikeGtkIconsTheming(GtkIconsTheming):
+    """Theming for GNOME-like GTK Icons"""
     pass
 
 
 class CinnamonGtkIconsTheming(GtkIconsTheming):
+    """Theming for Cinnamon GTK Icons"""
     def __init__(self):
         super().__init__()
 
@@ -147,6 +154,7 @@ class CinnamonGtkIconsTheming(GtkIconsTheming):
 
 
 class XfceGtkIconsTheming(GtkIconsTheming):
+    """Theming for XFCE GTK Icons"""
     def set_to(self, theme):
         super().set_to(theme)
 
@@ -159,9 +167,8 @@ class XfceGtkIconsTheming(GtkIconsTheming):
 
 
 # -----------------------
-# GNOME Shell Theming
 class ShellNotRunning(Exception):
-    """Ëxception for when the GNOME Shell is not running"""
+    """Exception for when the GNOME Shell is not running"""
     pass
 
 
@@ -172,6 +179,7 @@ class ShellExtensionNotValid(Exception):
 
 
 class GnomeShellTheming(DesktopTheming):
+    """Theming for GNOME Shell"""
     def __init__(self):
 
         self.themes = DirectoryFilter(self.valid_themes_filter,
@@ -235,8 +243,8 @@ class GnomeShellTheming(DesktopTheming):
 
 
 # -----------------------
-# KDE Look and Feel Theming
 class LookAndFeelTheming(DesktopTheming):
+    """Theming for KDE Look-and-Feel"""
     def __init__(self):
         self.themes = DirectoryFilter(self.valid_themes_filter,
                                       PATH_CONSTANTS['lookandfeel-themes'])
@@ -252,8 +260,8 @@ class LookAndFeelTheming(DesktopTheming):
 
 
 # -----------------------
-# Cinnamon Desktop Theming
 class CinnamonDesktopTheming(DesktopTheming):
+    """Theming for Cinnamon Desktop"""
     def __init__(self):
         self.themes = DirectoryFilter(self.valid_themes_filter,
                                       PATH_CONSTANTS['general-themes'],
@@ -277,8 +285,8 @@ class InvalidThemingError(NotImplementedError):
     pass
 
 
-# Environment SUPER base class
 class Environment:
+    """Environment SUPER base class"""
     theming_classes = None
 
     def __init__(self):
@@ -299,14 +307,13 @@ class Environment:
     def get_themes(self):
         themes = {}
         for key, theming_object in self.theming_objects.items():
-            if key not in themes:
-                raise InvalidThemingError(key)
             themes[key] = theming_object.get_installed()
 
         return themes
 
 
 class GnomelikeEnvironment(Environment):
+    """"GNOME-like Environment class"""
     def __init__(self):
         self.theming_classes = {
             'gtk': GnomelikeGtkTheming,
@@ -318,6 +325,7 @@ class GnomelikeEnvironment(Environment):
 
 
 class KdeEnvironment(Environment):
+    """"KDE Environment class"""
     def __init__(self):
         self.theming_classes = {
             'lookandfeel': LookAndFeelTheming,
@@ -328,6 +336,7 @@ class KdeEnvironment(Environment):
 
 
 class XfceEnvironment(Environment):
+    """"XFCE Environment class"""
     def __init__(self):
         self.theming_classes = {
             'gtk': XfceGtkTheming,
@@ -338,6 +347,7 @@ class XfceEnvironment(Environment):
 
 
 class CinnamonEnvironment(Environment):
+    """"Cinnamon Environment class"""
     def __init__(self):
         self.theming_classes = {
             'gtk': CinnamonGtkTheming,
@@ -355,6 +365,7 @@ class InvalidEnvironmentError(InvalidThemingError):
 
 
 class EnvironmentFactory:
+    """Environment Factory class"""
     # all the supported desktop environments
     environment_classes = {
         'gnome': GnomelikeEnvironment,
