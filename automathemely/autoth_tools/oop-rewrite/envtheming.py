@@ -1,18 +1,57 @@
 #!/usr/bin/env python3
 
-# TODO: Uncomment this
-# import gi
+import gi
+# gi.require_version('Gtk', '3.0')
 
 from pathlib import Path
+
+# TODO: Figure this out
+from .utils import DirectoryFilter
+
+# ===============================
+HOME = Path.home()
+PATH_CONSTANTS = {
+    'general-themes': ( \
+        '/usr/share/themes/', \
+        str(HOME.joinpath('.local/share/themes/')), \
+        str(HOME.joinpath('.themes/')) \
+    ),
+    'icons-themes': ( \
+        '/usr/share/icons/', \
+        str(HOME.joinpath('.local/share/icons/')), \
+        str(HOME.joinpath('.icons/')) \
+    ),
+    'lookandfeel-themes': ( \
+        '/usr/share/plasma/look-and-feel/', \
+        str(HOME.joinpath('.local/share/plasma/look-and-feel/')) \
+    ),
+    'shell-user-extensions': \
+        str(HOME.joinpath('.local/share/gnome-shell/extensions/')),
+    'kde-gtk-config': {
+        'gtk3': str(HOME.joinpath('.config/gtk-3.0/settings.ini')),
+        'gtk2': str(HOME.joinpath('.gtkrc-2.0'))
+    },
+}
+
+# ===============================
 
 
 # Theming SUPER base class
 class Theming:
+    themes = None
+
     def set_to(self, theme):
         raise NotImplementedError
 
-    def get_installed(self):
+    def valid_themes_filter(self, dir, theme):
         raise NotImplementedError
+
+    def get_installed(self):
+        if self.themes is None:
+            return NotImplementedError
+
+        self.themes.refresh_dirs()
+        return self.themes.get_all()
 
 
 # Generic desktop theming
@@ -25,18 +64,20 @@ class DesktopTheming(Theming):
 class GtkTheming(DesktopTheming):
     def __init__(self):
         self.gsettings_string = 'org.gnome.desktop.interface'
+        self.themes = DirectoryFilter(self.valid_themes_filter,
+                                      PATH_CONSTANTS['general-themes'])
 
     def set_to(self, theme):
-        # TODO: Uncomment this
-        # from gi.repository import Gio
+        from gi.repository import Gio
 
-        # gsettings = Gio.Settings.new(self.gsettings_string)
+        gsettings = Gio.Settings.new(self.gsettings_string)
 
-        # gsettings['gtk-theme'] = theme
-        pass
+        setattr(gsettings, "gtk-theme", theme)
+        # gsettings["gtk-theme"] = theme
 
-    # def get_installed(self):
-    #     pass
+    def valid_themes_filter(self, dir, theme):
+        return Path(dir).joinpath(theme).glob('gtk-3.*/gtk.css') and \
+            theme.lower() != 'default'
 
 
 # exactly the same
@@ -79,14 +120,19 @@ class KdeGtkTheming(GtkTheming):
 class GtkIconsTheming(DesktopTheming):
     def __init__(self):
         self.gsettings_string = 'org.gnome.desktop.interface'
+        self.themes = DirectoryFilter(self.valid_themes_filter,
+                                      PATH_CONSTANTS['icons-themes'])
 
     def set_to(self, theme):
-        # TODO: Uncomment this
-        # from gi.repository import Gio
+        from gi.repository import Gio
 
-        # gsettings = Gio.Settings.new(self.gsettings_string)
+        gsettings = Gio.Settings.new(self.gsettings_string)
+        setattr(gsettings, 'icon-theme', theme)
         # gsettings['icon-theme'] = theme
-        pass
+
+    def valid_themes_filter(self, dir, theme):
+        return Path(dir).joinpath(theme, 'index.theme') and \
+            theme.lower() != 'default'
 
 
 class GnomelikeGtkIconsTheming(GtkIconsTheming):
@@ -104,7 +150,7 @@ class XfceGtkIconsTheming(GtkIconsTheming):
     def set_to(self, theme):
         super().set_to(theme)
 
-        from subprocess import run, CalledProcessError
+        from subprocess import run
 
         run([
             'xfconf-query', '-c', 'xsettings', '-p', '/Net/IconThemeName',
@@ -127,6 +173,11 @@ class ShellExtensionNotValid(Exception):
 
 class GnomeShellTheming(DesktopTheming):
     def __init__(self):
+
+        self.themes = DirectoryFilter(self.valid_themes_filter,
+                                      PATH_CONSTANTS['general-themes'],
+                                      hardcoded={'default': 'default'})
+
         # This is WAY out of my level, I'll just let the professionals handle this one...
         # import gtweak
 
@@ -177,25 +228,45 @@ class GnomeShellTheming(DesktopTheming):
         # user_shell_settings.set_string('name', theme)
         pass
 
+    def valid_themes_filter(self, dir, theme):
+        return Path(dir).joinpath(
+            theme, 'gnome-shell', 'gnome-shell.css').is_file() and \
+                theme.lower() != 'default'
+
 
 # -----------------------
 # KDE Look and Feel Theming
 class LookAndFeelTheming(DesktopTheming):
-    def set_to(self, theme):
-        # from subprocess import run
+    def __init__(self):
+        self.themes = DirectoryFilter(self.valid_themes_filter,
+                                      PATH_CONSTANTS['lookandfeel-themes'])
 
-        # run(['lookandfeeltool', '-a', '{}'.format(theme)], check=True)
-        pass
+    def set_to(self, theme):
+        from subprocess import run
+
+        run(['lookandfeeltool', '-a', '{}'.format(theme)], check=True)
+
+    def valid_themes_filter(self, dir, theme):
+        return Path(dir).joinpath(theme, 'metadata.desktop').is_file() or \
+               Path(dir).joinpath(theme, 'metadata.json').is_file()
 
 
 # -----------------------
 # Cinnamon Desktop Theming
 class CinnamonDesktopTheming(DesktopTheming):
+    def __init__(self):
+        self.themes = DirectoryFilter(self.valid_themes_filter,
+                                      PATH_CONSTANTS['general-themes'],
+                                      hardcoded={'default': 'cinnamon'})
+
     def set_to(self, theme):
-        # from gi.repository import Gio
-        # cinnamon_settings = Gio.Settings.new('org.cinnamon.theme')
+        from gi.repository import Gio
+        cinnamon_settings = Gio.Settings.new('org.cinnamon.theme')
+        setattr(cinnamon_settings, 'name', theme)
         # cinnamon_settings['name'] = theme
-        pass
+
+    def valid_themes_filter(self, dir, theme):
+        return Path(dir).joinpath(theme, 'cinnamon').is_dir()
 
 
 # ==================================================
@@ -208,10 +279,10 @@ class InvalidThemingError(NotImplementedError):
 
 # Environment SUPER base class
 class Environment:
-    theming_classes = {}
+    theming_classes = None
 
     def __init__(self):
-        if not self.theming_classes:
+        if self.theming_classes is None:
             raise NotImplementedError
 
         # initialize all the objects
@@ -222,7 +293,7 @@ class Environment:
     def set_themes(self, themes):
         for key, theme in themes.items():
             if key not in self.theming_objects:
-                raise InvalidThemingError(key, )
+                raise InvalidThemingError(key)
             self.theming_objects[key].set_to(theme)
 
     def get_themes(self):
@@ -277,7 +348,7 @@ class CinnamonEnvironment(Environment):
         super().__init__()
 
 
-class InvalidEnvironmentError(NotImplementedError):
+class InvalidEnvironmentError(InvalidThemingError):
     """Exception for when an invalid environment is passed to the environment
     factory"""
     pass
