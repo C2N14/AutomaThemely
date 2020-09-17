@@ -6,7 +6,8 @@ import gi
 from pathlib import Path
 
 # TODO: Figure this out
-from .utils import DirectoryFilter
+from ..utils import DirectoryFilter
+from . import Theming
 
 # ===============================
 HOME = Path.home()
@@ -36,28 +37,17 @@ PATH_CONSTANTS = {
 # ===============================
 
 
-class Theming:
-    """Theming SUPER base class"""
-
-    themes = None
-
-    def set_to(self, theme):
-        raise NotImplementedError
-
+class DesktopTheming(Theming):
+    """Generic desktop theming"""
     def valid_themes_filter(self, dir, theme):
         raise NotImplementedError
 
     def get_installed(self):
         if self.themes is None:
-            return NotImplementedError
+            raise NotImplementedError
 
         self.themes.refresh_dirs()
         return self.themes.get_all()
-
-
-class DesktopTheming(Theming):
-    """Generic desktop theming"""
-    pass
 
 
 # -----------------------
@@ -187,54 +177,55 @@ class GnomeShellTheming(DesktopTheming):
                                       hardcoded={'default': 'default'})
 
         # This is WAY out of my level, I'll just let the professionals handle this one...
-        # import gtweak
+        import gtweak
 
-        # from gtweak.gshellwrapper import GnomeShellFactory
-        # from gtweak.defs import GSETTINGS_SCHEMA_DIR, LOCALE_DIR
-        # # This could probably be implemented in house but since we're already importing from gtweak I guess it'll stay
-        # # this way for now
+        from gtweak.gshellwrapper import GnomeShellFactory
+        from gtweak.defs import GSETTINGS_SCHEMA_DIR, LOCALE_DIR
+        # This could probably be implemented in house but since we're already
+        # importing from gtweak I guess it'll stay this way for now
 
-        # gtweak.GSETTINGS_SCHEMA_DIR = GSETTINGS_SCHEMA_DIR
-        # gtweak.LOCALE_DIR = LOCALE_DIR
-        # self.shell = GnomeShellFactory().get_shell()
-        # self.shell_theme_name = 'user-theme@gnome-shell-extensions.gcampax.github.com'
-        # self.shell_theme_schema = 'org.gnome.shell.extensions.user-theme'
-        # self.shell_theme_schema_dir = Path(
-        #     # PATH_CONSTANTS['shell-user-extensions']).joinpath(
-        #     'wee woo wee woo').joinpath(self.shell_theme_name, 'schemas')
+        gtweak.GSETTINGS_SCHEMA_DIR = GSETTINGS_SCHEMA_DIR
+        gtweak.LOCALE_DIR = LOCALE_DIR
+        self.shell = GnomeShellFactory().get_shell()
+        self.shell_theme_name = 'user-theme@gnome-shell-extensions.gcampax.github.com'
+        self.shell_theme_schema = 'org.gnome.shell.extensions.user-theme'
+        self.shell_theme_schema_dir = Path(
+            # PATH_CONSTANTS['shell-user-extensions']).joinpath(
+            'wee woo wee woo').joinpath(self.shell_theme_name, 'schemas')
 
-        # if self.shell is None:
-        #     raise ShellNotRunning('GNOME Shell is not running')
+        if self.shell is None:
+            raise ShellNotRunning('GNOME Shell is not running')
         pass
 
     def set_to(self, theme):
-        # from gtweak.gsettings import GSettingsSetting
+        from gtweak.gsettings import GSettingsSetting
 
-        # shell_extensions = self.shell.list_extensions()
+        shell_extensions = self.shell.list_extensions()
 
-        # if not self.shell_theme_name in shell_extensions or shell_extensions[
-        #         self.shell_theme_name]['state'] != 1:
-        #     raise ShellExtensionNotValid(
-        #         'GNOME Shell extension not enabled or could not be reached')
+        if not self.shell_theme_name in shell_extensions or shell_extensions[
+                self.shell_theme_name]['state'] != 1:
+            raise ShellExtensionNotValid(
+                'GNOME Shell extension not enabled or could not be reached')
 
-        # # If shell user-theme was installed locally e. g. through extensions.gnome.org
-        # if Path(self.shell_theme_schema_dir).is_dir():
-        #     user_shell_settings = GSettingsSetting(
-        #         self.shell_theme_schema,
-        #         schema_dir=str(self.shell_theme_schema_dir))
+        # If shell user-theme was installed locally e. g. through
+        # extensions.gnome.org
+        if Path(self.shell_theme_schema_dir).is_dir():
+            user_shell_settings = GSettingsSetting(
+                self.shell_theme_schema,
+                schema_dir=str(self.shell_theme_schema_dir))
 
-        # # If it was installed as a system extension
-        # else:
-        #     user_shell_settings = GSettingsSetting(self.shell_theme_schema)
+        # If it was installed as a system extension
+        else:
+            user_shell_settings = GSettingsSetting(self.shell_theme_schema)
 
-        # # To set the default theme you have to input an empty string, but since that won't work with the
-        # # Setting Manager's ComboBoxes we set it by this placeholder name
-        # if theme == 'default':
-        #     theme = ''
+        # To set the default theme you have to input an empty string, but since
+        # that won't work with the Setting Manager's ComboBoxes we set it by
+        # this placeholder name
+        if theme == 'default':
+            theme = ''
 
-        # # Set the GNOME Shell theme
-        # user_shell_settings.set_string('name', theme)
-        pass
+        # Set the GNOME Shell theme
+        user_shell_settings.set_string('name', theme)
 
     def valid_themes_filter(self, dir, theme):
         return Path(dir).joinpath(

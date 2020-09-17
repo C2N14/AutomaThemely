@@ -61,10 +61,11 @@ class UserSettings:
             pprint(self.user_settings_dictionary, indent=4)
 
 
-def main():
-    settings = UserSettings()
-    settings.load()
+settings = UserSettings()
+settings.load()
 
+
+def main():
     print(settings.get_setting('version.other'))
 
     settings.DEV_print('user')
