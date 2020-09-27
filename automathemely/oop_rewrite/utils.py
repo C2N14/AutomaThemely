@@ -5,17 +5,12 @@ from os import walk
 
 class DirectoryFilter:
     """Used for looking for valid themes in the specified directories"""
-
-    filtering_func = None
-    dirs = {}
-    __hardcoded = {}
-    __matches = {}
-
     def __init__(self, filtering_func, dirs, hardcoded=None):
         self.filtering_func = filtering_func
         self.dirs = dirs
-        if hardcoded is not None:
-            self.__hardcoded = hardcoded
+        self.__hardcoded = {} if hardcoded is None else hardcoded
+
+        self.__matches = {}
 
     def __getitem__(self, name: str) -> list:
         return self.__matches[name]

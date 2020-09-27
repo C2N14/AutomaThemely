@@ -4,6 +4,15 @@ from collections import Mapping
 import json
 from pathlib import Path
 
+BOOL_DICT = {
+    'true': True,
+    't': True,
+    '1': True,
+    'false': False,
+    'f': False,
+    '0': False,
+}
+
 
 def merge(orig_dic, upd_dic):
     """Recursively updates a dictionary without deleting its unused keys"""
@@ -14,11 +23,18 @@ def merge(orig_dic, upd_dic):
             orig_dic[k] = v
 
 
+def to_bool(value):
+    """Converts a possible string or int representation of a bool into a bool"""
+    try:
+        return BOOL_DICT[str(value).lower()]
+    except KeyError as e:
+        raise TypeError(f'Can\'t convert {value} to bool') from e
+
+
 class SettingsDict(dict):
     "Specialized wrapper class for the dict that holds the user's settings"
 
-    # important to set user_file!!!
-    def __init__(self, user_file=None, *args, **kwargs):
+    def __init__(self, user_file, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.__settings_file = user_file
@@ -28,18 +44,30 @@ class SettingsDict(dict):
         separator"""
         dic = super()
         for k in key.split(sep):
-            # print(dic)
             dic = dic.__getitem__(k)
         return dic
 
     def __setitem__(self, key, value, sep='.'):
         """Extends dict functionality to write keys recursivly delimited by a
-        separator, if the full path doesn't exist then it will make it"""
+        separator, if the full path doesn't exist then it will make it\n
+        It keeps the original type by raising a TypeError exception if a
+        conversion can't be made\n
+        This also has the nice side effect that when an immutable is set this
+        way, a copy of it is made and saved internally so it isn't referenced"""
+
         keys = key.split(sep)
         dic = super()
         for k in keys[:-1]:
             dic = dic.setdefault(k, {})
-        dic.__setitem__(keys[-1], value)
+
+        last_key = keys[-1]
+        # if the value doesn't exist, don't care for it's type
+        type_ = type(dic.get(last_key, value))
+        # prevent chaging types
+        if type_ == bool and not isinstance(value, bool):
+            dic.__setitem__(last_key, to_bool(value))
+        else:
+            dic.__setitem__(last_key, type_(value))
 
     def __str__(self):
         """Pretty printing using json.dumps"""
@@ -68,106 +96,106 @@ class SettingsDict(dict):
 setts = SettingsDict(
     user_file=str(Path().home().joinpath('settings.json')), # for testing
     **{
-        'desktop_environment': 'custom',
+        'desktop_environment': str('custom'),
         'themes': {
             'gnome': {
                 'light': {
-                    'gtk': '',
-                    'icons': '',
-                    'shell': ''
+                    'gtk': str(),
+                    'icons': str(),
+                    'shell': str()
                 },
                 'dark': {
-                    'gtk': '',
-                    'icons': '',
-                    'shell': ''
+                    'gtk': str(),
+                    'icons': str(),
+                    'shell': str()
                 }
             },
             'kde': {
                 'light': {
-                    'lookandfeel': '',
-                    'gtk': ''
+                    'lookandfeel': str(),
+                    'gtk': str()
                 },
                 'dark': {
-                    'lookandfeel': '',
-                    'gtk': ''
+                    'lookandfeel': str(),
+                    'gtk': str()
                 }
             },
             'xfce': {
                 'light': {
-                    'gtk': '',
-                    'icons': ''
+                    'gtk': str(),
+                    'icons': str()
                 },
                 'dark': {
-                    'gtk': '',
-                    'icons': ''
+                    'gtk': str(),
+                    'icons': str()
                 }
             },
             'cinnamon': {
                 'light': {
-                    'gtk': '',
-                    'desktop': '',
-                    'icons': ''
+                    'gtk': str(),
+                    'desktop': str(),
+                    'icons': str()
                 },
                 'dark': {
-                    'gtk': '',
-                    'desktop': '',
-                    'icons': ''
+                    'gtk': str(),
+                    'desktop': str(),
+                    'icons': str()
                 }
             }
         },
         'offset': {
-            'sunrise': 0,
-            'sunset': 0
+            'sunrise': int(0),
+            'sunset': int(0)
         },
         'location': {
-            'auto_enabled': True,
+            'auto_enabled': bool(True),
             'manual': {
-                'city': '',
-                'region': '',
-                'latitude': 0.0,
-                'longitude': 0.0,
-                'time_zone': ''
+                'city': str(),
+                'region': str(),
+                'latitude': float(0.0),
+                'longitude': float(0.0),
+                'time_zone': str()
             }
         },
         'misc': {
-            'notifications': True
+            'notifications': bool(True)
         },
         'extras': {
             'atom': {
-                'enabled': False,
+                'enabled': bool(False),
                 'themes': {
                     'light': {
-                        'theme': '',
-                        'syntax': ''
+                        'theme': str(),
+                        'syntax': str()
                     },
                     'dark': {
-                        'theme': '',
-                        'syntax': ''
+                        'theme': str(),
+                        'syntax': str()
                     }
                 }
             },
             'vscode': {
-                'enabled': False,
+                'enabled': bool(False),
                 'themes': {
-                    'light': '',
-                    'dark': ''
+                    'light': str(),
+                    'dark': str()
                 },
-                'custom_config_dir': ''
+                'custom_config_dir': str()
             },
             'scripts': {
                 'sunrise': {
-                    '1': '',
-                    '2': '',
-                    '3': '',
-                    '4': '',
-                    '5': ''
+                    '1': str(),
+                    '2': str(),
+                    '3': str(),
+                    '4': str(),
+                    '5': str()
                 },
                 'sunset': {
-                    '1': '',
-                    '2': '',
-                    '3': '',
-                    '4': '',
-                    '5': ''
+                    '1': str(),
+                    '2': str(),
+                    '3': str(),
+                    '4': str(),
+                    '5': str()
                 }
             }
         }

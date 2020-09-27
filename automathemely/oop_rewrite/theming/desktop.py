@@ -62,9 +62,7 @@ class GtkTheming(DesktopTheming):
         from gi.repository import Gio
 
         gsettings = Gio.Settings.new(self.gsettings_string)
-
-        setattr(gsettings, "gtk-theme", theme)
-        # gsettings["gtk-theme"] = theme
+        gsettings["gtk-theme"] = theme  # type: ignore
 
     def valid_themes_filter(self, dir, theme):
         return Path(dir).joinpath(theme).glob('gtk-3.*/gtk.css') and \
@@ -122,8 +120,7 @@ class GtkIconsTheming(DesktopTheming):
         from gi.repository import Gio
 
         gsettings = Gio.Settings.new(self.gsettings_string)
-        setattr(gsettings, 'icon-theme', theme)
-        # gsettings['icon-theme'] = theme
+        gsettings['icon-theme'] = theme  # type: ignore
 
     def valid_themes_filter(self, dir, theme):
         return Path(dir).joinpath(theme, 'index.theme') and \
@@ -174,7 +171,7 @@ class GnomeShellTheming(DesktopTheming):
 
         self.themes = DirectoryFilter(self.valid_themes_filter,
                                       PATH_CONSTANTS['general-themes'],
-                                      hardcoded={'default': 'default'})
+                                      hardcoded={'default': ['Default']})
 
         # This is WAY out of my level, I'll just let the professionals handle this one...
         import gtweak
@@ -187,11 +184,11 @@ class GnomeShellTheming(DesktopTheming):
         gtweak.GSETTINGS_SCHEMA_DIR = GSETTINGS_SCHEMA_DIR
         gtweak.LOCALE_DIR = LOCALE_DIR
         self.shell = GnomeShellFactory().get_shell()
-        self.shell_theme_name = 'user-theme@gnome-shell-extensions.gcampax.github.com'
-        self.shell_theme_schema = 'org.gnome.shell.extensions.user-theme'
-        self.shell_theme_schema_dir = Path(
-            # PATH_CONSTANTS['shell-user-extensions']).joinpath(
-            'wee woo wee woo').joinpath(self.shell_theme_name, 'schemas')
+        self.shell_ext_name = 'user-theme@gnome-shell-extensions.gcampax.github.com'
+        self.shell_ext_schema = 'org.gnome.shell.extensions.user-theme'
+        self.shell_ext_schema_dir = Path(
+            PATH_CONSTANTS['shell-user-extensions']).joinpath(
+                self.shell_ext_name, 'schemas')
 
         if self.shell is None:
             raise ShellNotRunning('GNOME Shell is not running')
@@ -202,30 +199,28 @@ class GnomeShellTheming(DesktopTheming):
 
         shell_extensions = self.shell.list_extensions()
 
-        if not self.shell_theme_name in shell_extensions or shell_extensions[
-                self.shell_theme_name]['state'] != 1:
+        if not self.shell_ext_name in shell_extensions or shell_extensions[
+                self.shell_ext_name]['state'] != 1:
             raise ShellExtensionNotValid(
                 'GNOME Shell extension not enabled or could not be reached')
 
         # If shell user-theme was installed locally e. g. through
         # extensions.gnome.org
-        if Path(self.shell_theme_schema_dir).is_dir():
+        if Path(self.shell_ext_schema_dir).is_dir():
             user_shell_settings = GSettingsSetting(
-                self.shell_theme_schema,
-                schema_dir=str(self.shell_theme_schema_dir))
+                self.shell_ext_schema,
+                schema_dir=str(self.shell_ext_schema_dir))
 
         # If it was installed as a system extension
         else:
-            user_shell_settings = GSettingsSetting(self.shell_theme_schema)
+            user_shell_settings = GSettingsSetting(self.shell_ext_schema)
 
+        # Set the GNOME Shell theme
         # To set the default theme you have to input an empty string, but since
         # that won't work with the Setting Manager's ComboBoxes we set it by
         # this placeholder name
-        if theme == 'default':
-            theme = ''
-
-        # Set the GNOME Shell theme
-        user_shell_settings.set_string('name', theme)
+        user_shell_settings.set_string('name',
+                                       '' if theme == 'default' else theme)
 
     def valid_themes_filter(self, dir, theme):
         return Path(dir).joinpath(
@@ -234,6 +229,7 @@ class GnomeShellTheming(DesktopTheming):
 
 
 # -----------------------
+# another messy class...
 class LookAndFeelTheming(DesktopTheming):
     """Theming for KDE Look-and-Feel"""
     def __init__(self):
@@ -249,6 +245,28 @@ class LookAndFeelTheming(DesktopTheming):
         return Path(dir).joinpath(theme, 'metadata.desktop').is_file() or \
                Path(dir).joinpath(theme, 'metadata.json').is_file()
 
+    def get_installed(self):
+        import configparser, json
+
+        real_themes = []
+
+        # prioritize .desktop  over .json just like systemsettings
+        self.themes.refresh_dirs()
+        # this is pretty much the only place where return_parents is used
+        for parent, theme_dir in self.themes.get_all(return_parents=True):
+            target_dir = Path(parent).joinpath(theme_dir)
+            if target_dir.joinpath('metadata.desktop').is_file():
+                metadata = configparser.ConfigParser(strict=False)
+                metadata.read(str(target_dir.joinpath('metadata.desktop')))
+                real_themes.append(metadata['Desktop Entry']['Name'])
+
+            # has to be JSON because it was already filtered before
+            else:
+                with target_dir.joinpath('metadata.json').open() as f:
+                    real_themes.append(json.load(f)['KPlugin']['Name'])
+
+        return real_themes
+
 
 # -----------------------
 class CinnamonDesktopTheming(DesktopTheming):
@@ -256,13 +274,13 @@ class CinnamonDesktopTheming(DesktopTheming):
     def __init__(self):
         self.themes = DirectoryFilter(self.valid_themes_filter,
                                       PATH_CONSTANTS['general-themes'],
-                                      hardcoded={'default': 'cinnamon'})
+                                      hardcoded={'default': ['Cinnamon']})
 
     def set_to(self, theme):
         from gi.repository import Gio
+
         cinnamon_settings = Gio.Settings.new('org.cinnamon.theme')
-        setattr(cinnamon_settings, 'name', theme)
-        # cinnamon_settings['name'] = theme
+        cinnamon_settings['name'] = theme  # type: ignore
 
     def valid_themes_filter(self, dir, theme):
         return Path(dir).joinpath(theme, 'cinnamon').is_dir()
@@ -293,12 +311,18 @@ class Environment:
         for key, theme in themes.items():
             if key not in self.theming_objects:
                 raise InvalidThemingError(key)
-            self.theming_objects[key].set_to(theme)
+
+            # TODO: Maybe log this somewhere?
+            if self.theming_objects[key] is not None:
+                self.theming_objects[key].set_to(theme)
 
     def get_themes(self):
         themes = {}
         for key, theming_object in self.theming_objects.items():
-            themes[key] = theming_object.get_installed()
+            if theming_object is None:
+                themes[key] = None
+            else:
+                themes[key] = theming_object.get_installed()
 
         return themes
 
@@ -312,7 +336,13 @@ class GnomelikeEnvironment(Environment):
             'shell': GnomeShellTheming
         }
 
-        super().__init__()
+        try:
+            super().__init__()
+        except ModuleNotFoundError as e:
+            if str(e) == 'No module named \'gtweak\'':
+                self.theming_objects['shell'] = None
+            else:
+                raise ModuleNotFoundError(e)
 
 
 class KdeEnvironment(Environment):
